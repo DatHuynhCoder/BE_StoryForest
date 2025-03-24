@@ -1,4 +1,4 @@
-import { BookReview } from "../../models/bookReview.model";
+import { BookReview } from "../../models/bookReview.model.js";
 
 export const createReview = async (req, res) => {
     const { name, rating, reviewImg, accountId, bookId } = req.body;

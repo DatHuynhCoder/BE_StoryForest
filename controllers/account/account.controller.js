@@ -1,4 +1,4 @@
-import { Account } from "../../models/account.model";
+import { Account } from "../../models/account.model.js";
 import cloudinary from "../../config/cloudinary.js";
 //delete temp files import
 import { deleteTempFiles } from "../../utils/deleteTempFiles.js";
