@@ -62,7 +62,7 @@ app.get("/mangadex/manga/:mangaId/images", async (req, res) => {
     try {
         // fetch all chapters of the manga
         const chaptersRes = await axios.get("https://api.mangadex.org/chapter", {
-            params: { manga: mangaId, translatedLanguage: ["en"], limit: 500 },
+            params: { manga: mangaId, translatedLanguage: ["en"], limit: 20 },
         });
 
         const chapters = chaptersRes.data.data;
