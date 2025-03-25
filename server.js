@@ -36,59 +36,59 @@ app.use(express.urlencoded({ extended: true })); //allow to handle url encoded d
 const PORT = process.env.PORT;
 
 app.get('/', (req, res) => {
-    res.send('<h1>Welcome to Ours Server</h1>');
+  res.send('<h1>Welcome to Ours Server</h1>');
 })
 
 app.get("/mangadex/manga", async (req, res) => {
-    try {
-        const response = await axios.get("https://api.mangadex.org/manga", {
-            params: {
-                limit: 100, // Get up to 100 manga
-                includes: ["cover_art"], // Include cover images
-                order: { followedCount: "desc" }, // Order by popularity
-            },
-        });
+  try {
+    const response = await axios.get("https://api.mangadex.org/manga", {
+      params: {
+        limit: 100, // Get up to 100 manga
+        includes: ["cover_art"], // Include cover images
+        order: { followedCount: "desc" }, // Order by popularity
+      },
+    });
 
-        res.json(response.data);
-    } catch (error) {
-        console.error("Error fetching manga:", error);
-        res.status(500).json({ error: "Failed to fetch manga" });
-    }
+    res.json(response.data);
+  } catch (error) {
+    console.error("Error fetching manga:", error);
+    res.status(500).json({ error: "Failed to fetch manga" });
+  }
 });
 
 app.get("/mangadex/manga/:mangaId/images", async (req, res) => {
-    const mangaId = req.params.mangaId;
+  const mangaId = req.params.mangaId;
 
-    try {
-        // fetch all chapters of the manga
-        const chaptersRes = await axios.get("https://api.mangadex.org/chapter", {
-            params: { manga: mangaId, translatedLanguage: ["en"], limit: 20 },
-        });
+  try {
+    // fetch all chapters of the manga
+    const chaptersRes = await axios.get("https://api.mangadex.org/chapter", {
+      params: { manga: mangaId, translatedLanguage: ["en"], limit: 20 },
+    });
 
-        const chapters = chaptersRes.data.data;
+    const chapters = chaptersRes.data.data;
 
-        // fetch images for each chapter
-        const imageLinks = await Promise.all(
-            chapters.map(async (chapter) => {
-                const chapterId = chapter.id;
+    // fetch images for each chapter
+    const imageLinks = await Promise.all(
+      chapters.map(async (chapter) => {
+        const chapterId = chapter.id;
 
-                // fetch image base URL & hash
-                const { data } = await axios.get(`https://api.mangadex.org/at-home/server/${chapterId}`);
-                const baseUrl = data.baseUrl;
-                const hash = data.chapter.hash;
-                const images = data.chapter.data; // page images
+        // fetch image base URL & hash
+        const { data } = await axios.get(`https://api.mangadex.org/at-home/server/${chapterId}`);
+        const baseUrl = data.baseUrl;
+        const hash = data.chapter.hash;
+        const images = data.chapter.data; // page images
 
-                // construct full image URLs
-                return images.map((img) => `${baseUrl}/data/${hash}/${img}`);
-            })
-        );
+        // construct full image URLs
+        return images.map((img) => `${baseUrl}/data/${hash}/${img}`);
+      })
+    );
 
-        // flatten array (since each chapter returns an array of images)
-        res.json({ images: imageLinks.flat() });
-    } catch (error) {
-        console.error("Error fetching manga images:", error);
-        res.status(500).json({ error: "Failed to fetch manga images" });
-    }
+    // flatten array (since each chapter returns an array of images)
+    res.json({ images: imageLinks.flat() });
+  } catch (error) {
+    console.error("Error fetching manga images:", error);
+    res.status(500).json({ error: "Failed to fetch manga images" });
+  }
 });
 
 //API author here
@@ -105,6 +105,6 @@ app.use('/account', accountRouter);
 app.use('/review', reviewRouter);
 
 app.listen(PORT, () => {
-    connectDB();
-    console.log(`Server start at http://localhost:${PORT}`);
+  connectDB();
+  console.log(`Server start at http://localhost:${PORT}`);
 })
