@@ -14,6 +14,7 @@ const ChapterSchema = new mongoose.Schema({
   dateAdd: {type: Date, default: Date.now },
   contentImgs: [
     {
+      order: Number,
       url: String,
       public_id: String
     }
