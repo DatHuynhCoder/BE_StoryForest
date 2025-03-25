@@ -50,11 +50,33 @@ app.get("/mangadex/manga", async (req, res) => {
       },
     });
 
-    res.json(response.data);
-  } catch (error) {
-    console.error("Error fetching manga:", error);
-    res.status(500).json({ error: "Failed to fetch manga" });
-  }
+        // Extract manga data and format it
+        const mangaList = response.data.data.map((manga) => {
+            const attributes = manga.attributes;
+
+            // Find cover_art relationship
+            const coverArt = manga.relationships.find((rel) => rel.type === "cover_art"); // an object
+            const coverId = coverArt ? coverArt.id : null;
+            const coverFileName = coverArt?.attributes?.fileName;
+
+            // Construct full cover URL
+            const coverUrl = coverFileName
+                ? `https://uploads.mangadex.org/covers/${manga.id}/${coverFileName}`
+                : null;
+
+            return {
+                id: manga.id,
+                title: attributes.title.en || "No English Title",
+                description: attributes.description.en || "No description available",
+                coverUrl,
+            };
+        });
+
+        res.json(mangaList);
+    } catch (error) {
+        console.error("Error fetching manga:", error);
+        res.status(500).json({ error: "Failed to fetch manga" });
+    }
 });
 
 app.get("/manga/:mangaId/details", async (req, res) => {
