@@ -39,6 +39,7 @@ app.get('/', (req, res) => {
   res.send('<h1>Welcome to Ours Server</h1>');
 })
 
+// get all 100 manga from mangadex
 app.get("/mangadex/manga", async (req, res) => {
   try {
     const response = await axios.get("https://api.mangadex.org/manga", {
@@ -56,22 +57,90 @@ app.get("/mangadex/manga", async (req, res) => {
   }
 });
 
-app.get("/mangadex/manga/:mangaId/images", async (req, res) => {
-  const mangaId = req.params.mangaId;
+app.get("/manga/:mangaId/details", async (req, res) => {
+    const mangaId = req.params.mangaId;
 
-  try {
-    // fetch all chapters of the manga
-    const chaptersRes = await axios.get("https://api.mangadex.org/chapter", {
-      params: { manga: mangaId, translatedLanguage: ["en"], limit: 20 },
-    });
+    try {
+        // Fetch manga details
+        const response = await axios.get(`https://api.mangadex.org/manga/${mangaId}`, {
+            params: { includes: ["cover_art", "author", "artist"] }, // Get extra details
+        });
 
-    const chapters = chaptersRes.data.data;
+        const manga = response.data.data;
+        const attributes = manga.attributes;
 
-    // fetch images for each chapter
-    const imageLinks = await Promise.all(
-      chapters.map(async (chapter) => {
-        const chapterId = chapter.id;
+        // Find cover image URL
+        const coverArt = manga.relationships.find((rel) => rel.type === "cover_art");
+        const coverId = coverArt ? coverArt.id : null;
+        const coverUrl = coverId
+            ? `https://uploads.mangadex.org/covers/${mangaId}/${coverArt.attributes.fileName}`
+            : null;
 
+        // Find authors and artists
+        const authors = manga.relationships
+            .filter((rel) => rel.type === "author")
+            .map((author) => author.attributes.name);
+
+        const artists = manga.relationships
+            .filter((rel) => rel.type === "artist")
+            .map((artist) => artist.attributes.name);
+
+        // Create a structured response
+        const mangaDetails = {
+            id: manga.id,
+            title: attributes.title.en || attributes.title.ja,
+            description: attributes.description.en || "No description available",
+            status: attributes.status,
+            publicationYear: attributes.year,
+            tags: attributes.tags.map((tag) => tag.attributes.name.en),
+            authors,
+            artists,
+            coverUrl,
+        };
+
+        res.json(mangaDetails);
+    } catch (error) {
+        console.error("Error fetching manga details:", error);
+        res.status(500).json({ error: "Failed to fetch manga details" });
+    }
+});
+
+// get 100 chapters of a manga
+app.get("/manga/:mangaId/chapters", async (req, res) => {
+    const mangaId = req.params.mangaId;
+
+    try {
+        const response = await axios.get("https://api.mangadex.org/chapter", {
+            params: {
+                manga: mangaId,
+                limit: 100, // Get up to 100 chapters
+                translatedLanguage: ["en"], // Filter by English chapters
+                order: { chapter: "asc" }, // Sort by chapter number
+            },
+        });
+
+        // Extract relevant details
+        const chapters = response.data.data.map((chapter) => ({
+            id: chapter.id,
+            title: chapter.attributes.title,
+            chapter: chapter.attributes.chapter,
+            volume: chapter.attributes.volume,
+            pages: chapter.attributes.pages,
+            publishDate: chapter.attributes.publishAt,
+        }));
+
+        res.json({ chapters });
+    } catch (error) {
+        console.error("Error fetching chapters:", error);
+        res.status(500).json({ error: "Failed to fetch chapters" });
+    }
+});
+
+// get images of a chapter
+app.get("/mangadex/chapter/:chapterId/images", async (req, res) => {
+    const chapterId = req.params.chapterId;
+
+    try {
         // fetch image base URL & hash
         const { data } = await axios.get(`https://api.mangadex.org/at-home/server/${chapterId}`);
         const baseUrl = data.baseUrl;
@@ -79,16 +148,12 @@ app.get("/mangadex/manga/:mangaId/images", async (req, res) => {
         const images = data.chapter.data; // page images
 
         // construct full image URLs
-        return images.map((img) => `${baseUrl}/data/${hash}/${img}`);
-      })
-    );
-
-    // flatten array (since each chapter returns an array of images)
-    res.json({ images: imageLinks.flat() });
-  } catch (error) {
-    console.error("Error fetching manga images:", error);
-    res.status(500).json({ error: "Failed to fetch manga images" });
-  }
+        const imagesURL = images.map((img) => `${baseUrl}/data/${hash}/${img}`);
+        return res.json({ chapterId, images: imagesURL });
+    } catch (error) {
+        console.error("Error fetching manga images:", error);
+        return res.status(500).json({ error: "Failed to fetch manga images" });
+    }
 });
 
 //API author here
