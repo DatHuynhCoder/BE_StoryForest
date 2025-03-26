@@ -1,10 +1,11 @@
 import { Account } from "../../models/account.model.js";
 import cloudinary from "../../config/cloudinary.js";
+import jwt from 'jsonwebtoken';
 //delete temp files import
 import { deleteTempFiles } from "../../utils/deleteTempFiles.js";
 
 export const createAccount = async (req, res) => {
-    const { name_account, name, email, phone, password, gender, avatar, role } = req.body;
+    const { username, name, email, phone, password, gender, avatar, role } = req.body;
     // check if account exists
     const accountExists = await Account.findOne({ email });
     if (accountExists) {
@@ -12,7 +13,7 @@ export const createAccount = async (req, res) => {
     }
     try {
         const account = await Account.create({
-            name_account,
+            username,
             name,
             email,
             phone,
