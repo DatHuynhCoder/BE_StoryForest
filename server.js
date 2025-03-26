@@ -238,16 +238,16 @@ app.get("/v2/manga/:mangaId/chapters", async (req, res) => {
 
 
 //API author here
-app.use('api/staff/author', authorRouter);
+app.use('/api/staff/author', authorRouter);
 
 //API book here
-app.use('api/staff/book', bookRouter);
+app.use('/api/staff/book', bookRouter);
 
 //API chapter here
-app.use('api/staff/chapter', chapterRoute);
+app.use('/api/staff/chapter', chapterRoute);
 
 //API update role
-app.post('api/admin/viprole/:id', async (req, res) => {
+app.post('/api/admin/viprole/:id', async (req, res) => {
 	try {
 		const userID = req.params.id;
 		const user = await Account.findById(userID);
@@ -267,7 +267,7 @@ app.post('api/admin/viprole/:id', async (req, res) => {
 })
 
 //api update favorite book
-app.post('api/reader/addfavorite/:id', async (req, res) => {
+app.post('/api/reader/addfavorite/:id', async (req, res) => {
 	try {
 		const userID = req.params.id;
 		const user = await Account.findById(userID);
@@ -299,9 +299,9 @@ app.post('api/reader/addfavorite/:id', async (req, res) => {
 	}
 });
 
-app.use('api/reader/account', accountRouter);
+app.use('/api/reader/account', accountRouter);
 
-app.use('api/reader/review', reviewRouter);
+app.use('/api/reader/review', reviewRouter);
 
 app.listen(PORT, () => {
 	connectDB();
