@@ -1,11 +1,11 @@
-import mongoose from "mongoose"
+import mongoose, {Schema} from "mongoose"
 import bcrypt from 'bcryptjs';
 
 const AccountSchema = new mongoose.Schema({
-  name_account: { type: String, required: true },
-  name: { type: String, required: true },
+  username: { type: String, required: true },
+  name: { type: String},
   email: { type: String, required: true, unique: true },
-  phone: { type: String, required: true },
+  phone: { type: String, unique: true },
   password: { type: String, required: true },
   gender: {
     type: String,
@@ -17,8 +17,15 @@ const AccountSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    emum: ['admin', 'user', 'VIP reader', 'staff', 'reader']
+    emum: ['admin', 'user', 'VIP reader', 'staff', 'reader'],
+    default: 'reader'
   },
+  favorites: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Book',
+    }
+  ]
 }, {
   timestamps: true
 })

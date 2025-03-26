@@ -8,12 +8,14 @@ import jwt from 'jsonwebtoken';
 import { protect } from './middleware/authMiddleware.js';
 import axios from 'axios';
 
+import { Book } from './models/book.model.js';
+
 //import Routes
 import authorRouter from './routes/staff/author.route.js';
 import bookRouter from './routes/staff/book.route.js';
 import chapterRoute from './routes/staff/chapter.route.js';
-import accountRouter from './routes/account/account.route.js';
-import reviewRouter from './routes/review/review.route.js';
+import accountRouter from './routes/reader/account.route.js';
+import reviewRouter from './routes/reader/review.route.js';
 
 // example of how to use the token in the frontend
 // fetch('/api/protected-route', {
@@ -236,17 +238,70 @@ app.get("/v2/manga/:mangaId/chapters", async (req, res) => {
 
 
 //API author here
-app.use('/staff/author', authorRouter);
+app.use('api/staff/author', authorRouter);
 
 //API book here
-app.use('/staff/book', bookRouter);
+app.use('api/staff/book', bookRouter);
 
 //API chapter here
-app.use('/staff/chapter', chapterRoute);
+app.use('api/staff/chapter', chapterRoute);
 
-app.use('/account', accountRouter);
+//API update role
+app.post('api/admin/viprole/:id', async (req, res) => {
+	try {
+		const userID = req.params.id;
+		const user = await Account.findById(userID);
+		if (!user) {
+			return res.status(404).json({ success: false, message: "user not found" });
+		}
+		const role = req.body.role;
+		user.role = role;
 
-app.use('/review', reviewRouter);
+		await user.save();
+
+		res.status(200).json({ success: true, message: `Update role to ${role}` });
+	} catch (error) {
+		console.error("Error in delete review: ", error.message);
+		return res.status(500).json({ success: false, message: "Server error" });
+	}
+})
+
+//api update favorite book
+app.post('api/reader/addfavorite/:id', async (req, res) => {
+	try {
+		const userID = req.params.id;
+		const user = await Account.findById(userID);
+		if (!user) {
+			return res.status(404).json({ success: false, message: "user not found" });
+		}
+
+		//get bookid
+		const bookID = req.body.bookId;
+		// Check if the book exists
+		const book = await Book.findById(bookID);
+		if (!book) {
+			return res.status(404).json({ success: false, message: 'Book not found' });
+		}
+
+		// Check if book is already in favorites
+		if (user.favorites.includes(bookID)) {
+			return res.status(400).json({ success: false, message: 'Book is already in favorites' });
+		}
+
+		// Add book to favorites
+		user.favorites.push(bookID);
+		await user.save();
+
+		return res.status(200).json({ success: true, data: "Added to favorites" });
+	} catch (error) {
+		console.error("Error in delete review: ", error.message);
+		return res.status(500).json({ success: false, message: "Server error" });
+	}
+});
+
+app.use('api/reader/account', accountRouter);
+
+app.use('api/reader/review', reviewRouter);
 
 app.listen(PORT, () => {
 	connectDB();
