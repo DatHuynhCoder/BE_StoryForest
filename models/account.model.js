@@ -21,7 +21,7 @@ const AccountSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    emum: ['admin', 'user', 'VIP reader', 'staff', 'reader'],
+    enum: ['admin', 'user', 'VIP reader', 'staff', 'reader'],
     default: 'reader'
   },
   favorites: [
