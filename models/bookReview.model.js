@@ -1,8 +1,10 @@
 import mongoose, { Schema } from "mongoose";
 
 const BookReviewSchema = new mongoose.Schema({
-  name: {type: String, required: true},
-  rating: {type: Number, default: 0},
+  content: { type: String, required: true },
+  rating: { type: Number, default: 0 },
+  chapterNumber: { type: String },
+  chapterTitle: { type: String },
   reviewImg: {
     url: String,
     public_id: String
@@ -12,12 +14,8 @@ const BookReviewSchema = new mongoose.Schema({
     ref: 'Account',
     required: true,
   },
-  bookId: {
-    type: Schema.Types.ObjectId,
-    ref: 'Book',
-    required: true
-  }
-},{
+  bookId: { type: String, require: true }
+}, {
   timestamps: true
 });
 

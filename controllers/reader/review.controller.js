@@ -1,11 +1,13 @@
 import { BookReview } from "../../models/bookReview.model.js";
 
 export const createReview = async (req, res) => {
-    const { name, rating, reviewImg, accountId, bookId } = req.body;
+    const { content, rating, chapterTitle, chapterNumber, reviewImg, accountId, bookId } = req.body;
     try {
         const review = await BookReview.create({
-            name,
+            content,
             rating,
+            chapterTitle,
+            chapterNumber,
             reviewImg,
             accountId,
             bookId
