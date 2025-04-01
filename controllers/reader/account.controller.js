@@ -80,7 +80,8 @@ export const loginAccount = async (req, res) => {
 		//generate refresh token
 		const refreshToken = jwt.sign({ id: account._id, role: account.role }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
 
-		//maybe you should store refresh token
+		//store refresh token in database
+		
 		return res.status(200).json({ success: true, data: account, token, refreshToken });
 	} else {
 		return res.status(401).json({ success: false, message: 'Invalid email or password' });
