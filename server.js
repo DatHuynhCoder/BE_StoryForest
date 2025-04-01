@@ -13,6 +13,7 @@ import { Book } from './models/book.model.js';
 //import Routes
 import authorRouter from './routes/staff/author.route.js';
 import bookRouter from './routes/staff/book.route.js';
+import novelRouter from './routes/novel/novel.route.js';
 import chapterRoute from './routes/staff/chapter.route.js';
 import accountRouter from './routes/reader/account.route.js';
 import reviewRouter from './routes/reader/review.route.js';
@@ -302,6 +303,8 @@ app.post('/api/reader/addfavorite/:id', async (req, res) => {
 app.use('/api/reader/account', accountRouter);
 
 app.use('/api/reader/review', reviewRouter);
+
+app.use('/api/novel', novelRouter)
 
 app.listen(PORT, () => {
 	connectDB();
