@@ -2,6 +2,7 @@ import mongoose, { Schema } from "mongoose";
 
 const NovelSchema = new mongoose.Schema({
     title: { type: String, required: true },
+    link: { type: String },
     cover_url: { type: String },
     synopsis: { type: String },
     tags: { type: [String], default: [] },
