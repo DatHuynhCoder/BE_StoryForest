@@ -7,6 +7,7 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import { protect } from './middleware/authMiddleware.js';
 import axios from 'axios';
+import cookieParser from 'cookie-parser';
 
 import { Book } from './models/book.model.js';
 
@@ -33,8 +34,9 @@ const app = express();
 
 //add middeleware
 app.use(express.json()); //parse json
-app.use(cors()); //allow cross origin request
 app.use(express.urlencoded({ extended: true })); //allow to handle url encoded data
+app.use(cookieParser()); //use Cookies to store token
+app.use(cors({origin: "http://localhost:5173", credentials: true})); //allow cross origin request
 
 const PORT = process.env.PORT;
 
