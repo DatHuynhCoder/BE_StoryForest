@@ -1,7 +1,7 @@
 import express from 'express';
 // multer to handle file upload
 import upload from '../../middleware/multer.js';
-import { createAccount, loginAccount, deleteAccount, getAllAccount, updateAccount, getAccount, refreshToken } from '../../controllers/reader/account.controller.js';
+import { createAccount, loginAccount, deleteAccount, getAllAccount, updateAccount, getAccount, refreshToken, logoutAccount } from '../../controllers/reader/account.controller.js';
 import { protect } from '../../middleware/authMiddleware.js';
 
 const accountRouter = express.Router();
@@ -11,6 +11,9 @@ accountRouter.post('/register', createAccount);
 
 //Login an account
 accountRouter.post('/login', loginAccount);
+
+//logout an account
+accountRouter.post('/logout', logoutAccount);
 
 //Get all account
 accountRouter.get('/all', getAllAccount);

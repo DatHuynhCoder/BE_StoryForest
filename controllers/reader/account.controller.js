@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 import { deleteTempFiles } from "../../utils/deleteTempFiles.js";
 
 export const refreshToken = async (req, res) => {
-	const { refreshToken } = req.body;
+	const refreshToken = req.cookies.refreshToken;
 
 	if (!refreshToken) {
 		return res.status(401).json({ success: false, message: 'Refresh token required' });
@@ -26,7 +26,7 @@ export const refreshToken = async (req, res) => {
 		const accessToken = jwt.sign(
 			{ id: account._id, role: account.role },
 			process.env.JWT_SECRET,
-			{ expiresIn: '15m' }
+			{ expiresIn: '3m' }
 		);
 
 		console.log("token refresh!")
@@ -59,7 +59,7 @@ export const createAccount = async (req, res) => {
 		})
 		// const account = await newAccount.save();
 		if (account) {
-			return res.status(201).json({ success: true, data: account});
+			return res.status(201).json({ success: true, data: account });
 		} else {
 			return res.status(400).json({ success: false, message: 'Invalid account data' });
 		}
@@ -70,23 +70,58 @@ export const createAccount = async (req, res) => {
 }
 
 export const loginAccount = async (req, res) => {
-	const { email, password } = req.body;
+	try {
+		const { email, password } = req.body;
 
-	const account = await Account.findOne({ email });
+		// Find account by email
+		const account = await Account.findOne({ email });
 
-	if (account && (await account.matchPassword(password))) {
-		//generate access token
-		const token = jwt.sign({ id: account._id, role: account.role }, process.env.JWT_SECRET, { expiresIn: '15m' });
-		//generate refresh token
-		const refreshToken = jwt.sign({ id: account._id, role: account.role }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+		if (!account || !(await account.matchPassword(password))) {
+			return res.status(401).json({ success: false, message: 'Invalid email or password' });
+		}
 
-		//store refresh token in database
-		
-		return res.status(200).json({ success: true, data: account, token, refreshToken });
-	} else {
-		return res.status(401).json({ success: false, message: 'Invalid email or password' });
+		// Generate tokens
+		const accessToken = jwt.sign(
+			{ id: account._id, role: account.role },
+			process.env.JWT_SECRET,
+			{ expiresIn: '3m' }
+		);
+
+		const refreshToken = jwt.sign(
+			{ id: account._id, role: account.role },
+			process.env.JWT_REFRESH_SECRET,
+			{ expiresIn: '7d' }
+		);
+
+		// Store refresh token in an HTTP-only cookie
+		res.cookie("refreshToken", refreshToken, {
+			httpOnly: true,
+			secure: true, // Change to true in production
+			sameSite: "Strict",
+			maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+		});
+
+		return res.status(200).json({ success: true, data: account, accessToken });
+	} catch (error) {
+		console.error("Error in login:", error.message);
+		return res.status(500).json({ success: false, message: "Server error" });
 	}
-}
+};
+
+
+export const logoutAccount = async (req, res) => {
+	try {
+		res.clearCookie("refreshToken", {
+			httpOnly: true,
+			secure: true,
+			sameSite: "Strict"
+		});
+		res.status(200).json({ success: true, message: "Logged out successfully" });
+	} catch (error) {
+		console.error("Error in log out: ", error.message);
+		return res.status(500).json({ success: false, message: "Server error" });
+	}
+};
 
 export const getAllAccount = async (req, res) => {
 	try {
