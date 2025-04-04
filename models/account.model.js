@@ -15,9 +15,13 @@ const AccountSchema = new mongoose.Schema({
     url: String,
     public_id: String
   },
+  bgImg: {
+    url: String,
+    public_id: String
+  },
   role: {
     type: String,
-    emum: ['admin', 'user', 'VIP reader', 'staff', 'reader'],
+    enum: ['admin', 'user', 'VIP reader', 'staff', 'reader'],
     default: 'reader'
   },
   favorites: [

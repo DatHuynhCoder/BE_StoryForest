@@ -7,12 +7,14 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import { protect } from './middleware/authMiddleware.js';
 import axios from 'axios';
+import cookieParser from 'cookie-parser';
 
 import { Book } from './models/book.model.js';
 
 //import Routes
 import authorRouter from './routes/staff/author.route.js';
 import bookRouter from './routes/staff/book.route.js';
+import novelRouter from './routes/novel/novel.route.js';
 import chapterRoute from './routes/staff/chapter.route.js';
 import accountRouter from './routes/reader/account.route.js';
 import reviewRouter from './routes/reader/review.route.js';
@@ -32,8 +34,9 @@ const app = express();
 
 //add middeleware
 app.use(express.json()); //parse json
-app.use(cors()); //allow cross origin request
 app.use(express.urlencoded({ extended: true })); //allow to handle url encoded data
+app.use(cookieParser()); //use Cookies to store token
+app.use(cors({ origin: "http://localhost:5173", credentials: true })); //allow cross origin request
 
 const PORT = process.env.PORT;
 
@@ -47,7 +50,7 @@ app.get("/mangadex/manga", async (req, res) => {
 		const response = await axios.get("https://api.mangadex.org/manga", {
 			params: {
 				limit: 100, // Get up to 100 manga
-				includes: ["cover_art"], // Include cover images
+				includes: ["cover_art", "author", "artist"], // Include cover images
 				order: { followedCount: "desc" }, // Order by popularity
 			},
 		});
@@ -70,15 +73,27 @@ app.get("/mangadex/manga", async (req, res) => {
 				? `https://uploads.mangadex.org/covers/${manga.id}/${coverFileName}`
 				: null;
 
+			const authors = manga.relationships
+				.filter((rel) => rel.type === "author")
+				.map((author) => author.attributes.name);
+
+			const artists = manga.relationships
+				.filter((rel) => rel.type === "artist")
+				.map((artist) => artist.attributes.name);
+
 			return {
-				id: manga.id,
+				mangaid: manga.id,
 				title: attributes.title.en || "No English Title",
-				description: attributes.description.en || "No description available",
-				coverUrl,
+				author: authors,
+				artist: artists,
+				synopsis: attributes.description.en || "No description available",
+				tags: tag,
 				status: attributes.status,
-				tag: tag,
-				publishYear: attributes.year,
-				contentRating: attributes.contentRating,
+				type: "manga",
+				views: 238,
+				followers: 0,
+				rate: 5,
+				cover_url: coverUrl,
 			};
 		});
 
@@ -118,16 +133,33 @@ app.get("/manga/:mangaId/details", async (req, res) => {
 			.map((artist) => artist.attributes.name);
 
 		// Create a structured response
+
+		// mangaid: manga.id,
+		// title: attributes.title.en || "No English Title",
+		// author: authors,
+		// artist: artists,
+		// synopsis: attributes.description.en || "No description available",
+		// tags: tag,
+		// status: attributes.status,
+		// type: "manga",
+		// views: 238,
+		// followers: 0,
+		// rate: 5,
+		// cover_url: coverUrl,
+
 		const mangaDetails = {
-			id: manga.id,
+			mangaid: manga.id,
 			title: attributes.title.en || attributes.title.ja,
-			description: attributes.description.en || "No description available",
-			status: attributes.status,
-			publicationYear: attributes.year,
+			author: authors,
+			artist: artists,
+			synopsis: attributes.description.en || "No description available",
 			tags: attributes.tags.map((tag) => tag.attributes.name.en),
-			authors,
-			artists,
-			coverUrl,
+			status: attributes.status,
+			type: "manga",
+			views: 238,
+			followers: 0,
+			rate: 5,
+			cover_url: coverUrl,
 		};
 
 		res.json(mangaDetails);
@@ -302,6 +334,8 @@ app.post('/api/reader/addfavorite/:id', async (req, res) => {
 app.use('/api/reader/account', accountRouter);
 
 app.use('/api/reader/review', reviewRouter);
+
+app.use('/api/novel', novelRouter)
 
 app.listen(PORT, () => {
 	connectDB();
