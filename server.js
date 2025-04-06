@@ -18,6 +18,7 @@ import novelRouter from './routes/novel/novel.route.js';
 import chapterRoute from './routes/staff/chapter.route.js';
 import accountRouter from './routes/reader/account.route.js';
 import reviewRouter from './routes/reader/review.route.js';
+import searchRouter from './routes/search.route.js';
 
 // example of how to use the token in the frontend
 // fetch('/api/protected-route', {
@@ -336,6 +337,8 @@ app.use('/api/reader/account', accountRouter);
 app.use('/api/reader/review', reviewRouter);
 
 app.use('/api/novel', novelRouter)
+
+app.use('/api/search', searchRouter)
 
 app.listen(PORT, () => {
 	connectDB();
