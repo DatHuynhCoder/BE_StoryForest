@@ -7,7 +7,7 @@ const BookSchema = new mongoose.Schema({
     public_id: String
   },
   description: {type: String, required: true},
-  type: {type: String, enum: ['sách đọc - audio', 'sách tranh'], default: 'sách tranh'},
+  type: {type: String, enum: ['manga', 'novel'], default: 'manga'},
   tag: {type: [String], default: []},
   pages: {type: Number, required: true},
   status:{type: String, enum: ['ongoing','completed','hiatus']},
