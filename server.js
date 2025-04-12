@@ -324,45 +324,6 @@ app.post("/api/admin/viprole/:id", async (req, res) => {
   }
 });
 
-//api update favorite book
-app.post("/api/reader/addfavorite/:id", async (req, res) => {
-  try {
-    const userID = req.params.id;
-    const user = await Account.findById(userID);
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "user not found" });
-    }
-
-    //get bookid
-    const bookID = req.body.bookId;
-    // Check if the book exists
-    const book = await Book.findById(bookID);
-    if (!book) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Book not found" });
-    }
-
-    // Check if book is already in favorites
-    if (user.favorites.includes(bookID)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Book is already in favorites" });
-    }
-
-    // Add book to favorites
-    user.favorites.push(bookID);
-    await user.save();
-
-    return res.status(200).json({ success: true, data: "Added to favorites" });
-  } catch (error) {
-    console.error("Error in delete review: ", error.message);
-    return res.status(500).json({ success: false, message: "Server error" });
-  }
-});
-
 app.get("/api/suggestion", async (req, res) => {
   try {
     // Lấy từ khóa tìm kiếm từ query string của request (ví dụ: ?q=truyện isekai)
@@ -410,6 +371,8 @@ app.get("/api/suggestion", async (req, res) => {
 });
 
 app.use("/api/reader/account", accountRouter);
+
+app.use("api/reader/favorite", favoriteRouter);
 
 app.use("/api/reader/review", reviewRouter);
 
