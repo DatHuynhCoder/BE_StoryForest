@@ -24,12 +24,6 @@ const AccountSchema = new mongoose.Schema({
     enum: ['admin', 'user', 'VIP reader', 'staff', 'reader'],
     default: 'reader'
   },
-  favorites: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Book',
-    }
-  ]
 }, {
   timestamps: true
 })
