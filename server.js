@@ -18,6 +18,7 @@ import novelRouter from './routes/novel/novel.route.js';
 import chapterRoute from './routes/staff/chapter.route.js';
 import accountRouter from './routes/reader/account.route.js';
 import reviewRouter from './routes/reader/review.route.js';
+import favoriteRouter from './routes/reader/favorite.route.js';
 import searchRouter from './routes/search.route.js';
 
 // example of how to use the token in the frontend
