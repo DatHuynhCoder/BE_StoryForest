@@ -1,5 +1,5 @@
 import express from 'express';
-import { createBook, deleteBook, getBook } from '../../controllers/staff/book.controller.js';
+import { createBook, deleteBook, getBook, updateBook } from '../../controllers/staff/book.controller.js';
 // multer to handle file upload
 import upload from '../../middleware/multer.js';
 
@@ -13,5 +13,8 @@ bookRouter.get('/:id', getBook);
 
 //delete a book
 bookRouter.delete('/:id', deleteBook);
+
+//update a book
+bookRouter.put('/:id', upload.single('bookImg'), updateBook)
 
 export default bookRouter;

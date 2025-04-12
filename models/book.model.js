@@ -13,6 +13,10 @@ const BookSchema = new mongoose.Schema({
     type: { type: String },
     artist: { type: [String], default: [] },
     mangaid: { type: String },
+    bookImg: {
+        url: String,
+        public_id: String
+    }
 }, {
     timestamps: true
 })
