@@ -19,11 +19,12 @@ export const getAllManga = async (req, res) => {
 
 export const getMangaDetails = async (req, res) => {
     try {
-        const { id } = req.params
-        const manga = await Book.findById(id).limit(2)
-        return res.status(200).json({ success: true, data: manga })
+        const { _id } = req.params
+        const manga = await Book.findById(_id).limit(2)
+        const chapters = await MangaChapter.find({ mangaid: manga.mangaid })
+        return res.status(200).json({ success: true, data: { manga, chapters } })
     } catch (err) {
-        console.log('Error while getting mangas: ', err.message)
+        console.log('Error while getting manga details: ', err.message)
         return res.status(500).json({ success: false, message: "Server error" })
     }
 }
@@ -33,7 +34,7 @@ export const getChaptersByMangaId = async (req, res) => {
         const chapters = await MangaChapter.find({ mangaid: mangaid })
         return res.status(200).json({ success: true, data: chapters })
     } catch (err) {
-        console.log('Error while getting mangas: ', err.message)
+        console.log('Error while getting chapters: ', err.message)
         return res.status(500).json({ success: false, message: "Server error" })
     }
 }
@@ -44,7 +45,7 @@ export const getMangaImagesByChapterId = async (req, res) => {
         const images = await MangaImage.find({ chapterId: chapterid })
         return res.status(200).json({ success: true, data: images })
     } catch (err) {
-        console.log('Error while getting mangas: ', err.message)
+        console.log('Error while getting chapter images: ', err.message)
         return res.status(500).json({ success: false, message: "Server error" })
     }
 }
