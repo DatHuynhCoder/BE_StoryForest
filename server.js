@@ -133,7 +133,7 @@ app.get("/api/suggestion", async (req, res) => {
 
 app.use("/api/reader/account", accountRouter);
 
-app.use("api/reader/favorite", favoriteRouter);
+app.use("/api/reader/favorite", favoriteRouter);
 
 app.use("/api/reader/review", reviewRouter);
 
