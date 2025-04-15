@@ -1,9 +1,14 @@
 import { Favorite } from "../../models/favorite.model.js";
+import mongoose from "mongoose";
 
 export const addFavorite = async (req, res) => {
   try {
     const userId = req.user.id;
     const { bookId } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(bookId)) {
+      return res.status(400).json({ success: false, message: "Invalid bookId" });
+    }
 
     const favorite = await Favorite.findOneAndUpdate(
       { userId },
