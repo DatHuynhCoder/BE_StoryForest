@@ -2,7 +2,7 @@ import mongoose, { Schema } from "mongoose";
 
 const BookSchema = new mongoose.Schema({
     title: { type: String, required: true },
-    author: { type: String },
+    author: { type: [String] },
     synopsis: { type: String },
     tags: { type: [String], default: [] },
     status: { type: String },
@@ -13,6 +13,10 @@ const BookSchema = new mongoose.Schema({
     type: { type: String },
     artist: { type: [String], default: [] },
     mangaid: { type: String },
+    bookImg: {
+        url: String,
+        public_id: String
+    }
 }, {
     timestamps: true
 })
