@@ -1,7 +1,7 @@
 import express from 'express';
 // multer to handle file upload
 
-import { getAllNovel, getAllCompletedNovel, getAllOngoingNovel, getNovelById, getChaptersByNovelId, getChapterByIdAndNovelId } from '../../controllers/novel/novel.controller.js';
+import { getAllNovel, getNovelByPage, getAllCompletedNovel, getAllOngoingNovel, getNovelById, getChaptersByNovelId, getChapterByIdAndNovelId } from '../../controllers/novel/novel.controller.js';
 import { protect } from '../../middleware/authMiddleware.js';
 
 const novelRouter = express.Router();
@@ -9,6 +9,8 @@ const novelRouter = express.Router();
 // Get all novels
 
 novelRouter.get('/', getAllNovel)
+// new Get manga
+novelRouter.get('/v2', getNovelByPage)
 // Get all completed novels
 novelRouter.get('/completed', getAllCompletedNovel)
 // Get all ongoing novels
