@@ -103,10 +103,9 @@ app.get("/api/suggestion", async (req, res) => {
         },
       ],
       input: `
-			Search the file data and select at least 2 and at most 10 stories related to: "${query}".  
+			Search the file data and select at least 5 and at most 10 stories related to: "${query}".  
 			Only return a valid JSON string that I can copy entirely without causing any errors.  
 			Do not include any text, comments, or markdown symbols.
-			Tranla  
 			The format must strictly follow this structure:  
 			[{"title": "Story Title", "description": "Story Description"}, {"title": "Story Title", "description": "Story Description"}, ...].
 			`,
