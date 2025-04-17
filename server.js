@@ -21,6 +21,7 @@ import accountRouter from './routes/reader/account.route.js';
 import reviewRouter from './routes/reader/review.route.js';
 import favoriteRouter from './routes/reader/favorite.route.js';
 import searchRouter from './routes/search.route.js';
+import texttospeakRouter from "./routes/vipreader/texttospeak.route.js";
 
 // example of how to use the token in the frontend
 // fetch('/api/protected-route', {
@@ -142,6 +143,9 @@ app.use("/api/novel", novelRouter);
 app.use("/api/manga", mangaRouter);
 
 app.use('/api/search', searchRouter)
+
+//api for VIP reader
+app.use('/api/vipreader/texttospeak', texttospeakRouter);
 
 app.listen(PORT, () => {
   connectDB();
