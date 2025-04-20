@@ -1,6 +1,6 @@
 import { Book } from "../../models/book.model.js";
 import { NovelChapter } from "../../models/novelchapter.model.js";
-import { generatePaginationParams } from "../../utils/generatePaginationParams.js";
+import { generatePaginationParamsForFilter } from "../../utils/pagination.js";
 
 export const getAllNovel = async (req, res) => {
     try {
@@ -19,7 +19,7 @@ export const getAllNovel = async (req, res) => {
 
 export const getNovelByPage = async (req, res) => {
     try {
-        const { page, limit, skip, sortOption } = generatePaginationParams(req.query, ['rate', 'followers', 'views']);
+        const { page, limit, skip, sortOption } = generatePaginationParamsForFilter(req.query, ['rate', 'followers', 'views']);
 
         const novels = await Book.find({ type: "novel" })
             .sort(sortOption)

@@ -1,7 +1,10 @@
 import { Book } from "../../models/book.model.js";
 import { MangaChapter } from "../../models/mangachapter.model.js";
 import { MangaImage } from "../../models/mangaimage.model.js";
-import { generatePaginationParams } from "../../utils/generatePaginationParams.js";
+import {
+    generatePaginationParams,
+    generatePaginationParamsForFilter
+} from "../../utils/pagination.js";
 
 export const getAllManga = async (req, res) => {
     try {
@@ -18,33 +21,9 @@ export const getAllManga = async (req, res) => {
     }
 }
 
-export const getMangaByPage = async (req, res) => {
-    // try {
-    //     const { page, limit } = req.query;
-    //     const pageNumber = parseInt(page) || 1;
-    //     const pageSize = parseInt(limit) || 10;
-
-    //     const mangas = await Book.find({ type: "manga" })
-    //         .skip((pageNumber - 1) * pageSize)
-    //         .limit(pageSize);
-
-    //     const totalMangas = await Book.countDocuments({ type: "manga" });
-
-    //     return res.status(200).json({
-    //         success: true,
-    //         data: mangas,
-    //         pagination: {
-    //             currentPage: pageNumber,
-    //             totalPages: Math.ceil(totalMangas / pageSize),
-    //             totalItems: totalMangas,
-    //         },
-    //     });
-    // } catch (err) {
-    //     console.log('Error while getting mangas by page: ', err.message);
-    //     return res.status(500).json({ success: false, message: "Server error" });
-    // }
+export const getMangaWithFilter = async (req, res) => {
     try {
-        const { page, limit, skip, sortOption } = generatePaginationParams(req.query, ['rate', 'followers', 'views']);
+        const { page, limit, skip, sortOption } = generatePaginationParamsForFilter(req.query, ['rate', 'followers', 'views']);
 
         const mangas = await Book.find({ type: "manga" })
             .sort(sortOption)
@@ -65,6 +44,37 @@ export const getMangaByPage = async (req, res) => {
     } catch (err) {
         console.log('Error while getting mangas by page: ', err.message);
         return res.status(500).json({ success: false, message: "Server error" });
+    }
+}
+
+export const getMangaByStatus = async (req, res) => {
+    try {
+        const status = req.query.status
+
+        const { page, limit, skip } = generatePaginationParams(req.query)
+
+        if (!status) {
+            return res.status(400).json({ success: false, message: "Status query parameter is required" });
+        }
+
+        const mangas = await Book.find({ type: "manga", status: status })
+            .skip(skip)
+            .limit(limit)
+
+        const totalMangas = await Book.countDocuments({ type: "manga", status: status })
+
+        return res.status(200).json({
+            success: true,
+            data: mangas,
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(totalMangas / limit),
+                totalItems: totalMangas,
+            }
+        })
+    } catch (err) {
+        console.log('Error while getting mangas by status: ', err.message)
+        return res.status(500).json({ success: false, message: "Server error" })
     }
 }
 
