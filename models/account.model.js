@@ -24,6 +24,11 @@ const AccountSchema = new mongoose.Schema({
     enum: ['admin', 'user', 'VIP reader', 'staff', 'reader'],
     default: 'reader'
   },
+  achivement: {
+    type: String,
+    default: 'New Member'
+  },
+  about: { type: [String], default: [] },
 }, {
   timestamps: true
 })
