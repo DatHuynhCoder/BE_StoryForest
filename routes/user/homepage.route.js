@@ -4,6 +4,6 @@ import { getHomepage } from '../../controllers/user/homepage.controller.js';
 const homepageRouter = express.Router()
 
 //Get Homepage details infomation
-homepageRouter.get('/homepage', getHomepage)
+homepageRouter.get('/', getHomepage)
 
 export default homepageRouter;
