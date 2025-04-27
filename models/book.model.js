@@ -16,7 +16,8 @@ const BookSchema = new mongoose.Schema({
     bookImg: {
         url: String,
         public_id: String
-    }
+    },
+    page: { type: Number }
 }, {
     timestamps: true
 })

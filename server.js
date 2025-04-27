@@ -8,6 +8,8 @@ import jwt from "jsonwebtoken";
 import { protect } from "./middleware/authMiddleware.js";
 import axios from "axios";
 import cookieParser from "cookie-parser";
+import crypto from "crypto";
+import moment from "moment";
 
 import { Book } from "./models/book.model.js";
 
@@ -21,6 +23,8 @@ import accountRouter from './routes/reader/account.route.js';
 import reviewRouter from './routes/reader/review.route.js';
 import favoriteRouter from './routes/reader/favorite.route.js';
 import searchRouter from './routes/search.route.js';
+import texttospeakRouter from "./routes/vipreader/texttospeak.route.js";
+import homepageRouter from "./routes/user/homepage.route.js";
 
 // example of how to use the token in the frontend
 // fetch('/api/protected-route', {
@@ -140,6 +144,74 @@ app.use("/api/novel", novelRouter);
 app.use("/api/manga", mangaRouter);
 
 app.use('/api/search', searchRouter)
+
+//api for VIP reader
+app.use('/api/vipreader/texttospeak', texttospeakRouter);
+
+//api for user
+app.use('/api/user/', homepageRouter);
+
+const config = {
+  app_id: '2553',
+  key1: 'PcY4iZIKFCIdgZvA6ueMcMHHUbRLYjPL',
+  key2: 'kLtgPl8HHhfvMuDHPwKfgfsY4Ydm9eIz',
+  endpoint: 'https://sb-openapi.zalopay.vn/v2/create',
+  callback_url: 'http://localhost:5000/zalopay-callback',
+};
+
+app.post('/zalopay', async (req, res) => {
+  const { userid } = req.body;
+  const embed_data = {
+    name: "vipmember",
+  }
+  const amount = 1000000; // 1000000 VND
+  const items = ["vip"];
+  const transID = Math.floor(Math.random() * 1000000);
+  const order = {
+    app_id: config.app_id,
+    app_trans_id: `${moment().format('YYMMDD')}_${transID}`,
+    app_user: 'demo_user',
+    app_time: Date.now(),
+    item: JSON.stringify(items),
+    embed_data: JSON.stringify(embed_data),
+    amount,
+    description: `Nâng cấp tài khoản`,
+    bank_code: '',
+    callback_url: config.callback_url,
+  };
+
+  // Tạo chữ ký
+  const data = `${order.app_id}|${order.app_trans_id}|${order.app_user}|${order.amount}|${order.app_time}|${order.embed_data}|${order.item}`;
+  order.mac = crypto.createHmac('sha256', config.key1).update(data).digest('hex');
+
+  try {
+    const result = await axios.post(config.endpoint, null, { params: order });
+    console.log('✅ ZaloPay order created:', result.data);
+    // làm gì đó với kết quả trả về từ ZaloPay, ví dụ: lưu vào DB hoặc gửi lại cho client
+    return res.json({ order_url: result.data.order_url });
+  } catch (err) {
+    console.error(err.response?.data || err);
+    return res.status(500).json({ error: 'Lỗi tạo đơn hàng ZaloPay' });
+  }
+});
+
+// ngrok
+app.post('/zalopay-callback', express.json(), (req, res) => {
+  const dataStr = req.body.data;
+  const reqMac = req.body.mac;
+  const mac = crypto.createHmac('sha256', config.key2).update(dataStr).digest('hex');
+
+  if (reqMac !== mac) {
+    return res.status(400).send('invalid callback');
+  }
+
+  const data = JSON.parse(dataStr);
+  console.log('✅ ZaloPay payment success:', data);
+
+  // 👉 Cập nhật trạng thái đơn hàng trong DB tại đây
+
+  res.json({ return_code: 1, return_message: 'success' });
+});
 
 app.listen(PORT, () => {
   connectDB();

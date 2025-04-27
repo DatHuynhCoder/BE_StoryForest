@@ -1,5 +1,6 @@
 import { Book } from "../../models/book.model.js";
 import { NovelChapter } from "../../models/novelchapter.model.js";
+import { generatePaginationParamsForFilter } from "../../utils/pagination.js";
 
 export const getAllNovel = async (req, res) => {
     try {
@@ -13,6 +14,32 @@ export const getAllNovel = async (req, res) => {
     } catch (err) {
         console.log('Error while getting novels: ', err.message)
         return res.status(500).json({ success: false, message: "Server error" })
+    }
+}
+
+export const getNovelByPage = async (req, res) => {
+    try {
+        const { page, limit, skip, sortOption } = generatePaginationParamsForFilter(req.query, ['rate', 'followers', 'views']);
+
+        const novels = await Book.find({ type: "novel" })
+            .sort(sortOption)
+            .skip(skip)
+            .limit(limit);
+
+        const totalNovels = await Book.countDocuments({ type: "novel" });
+
+        return res.status(200).json({
+            success: true,
+            data: novels,
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(totalNovels / limit),
+                totalItems: totalNovels,
+            },
+        });
+    } catch (err) {
+        console.log("Error while getting novels by page: ", err.message);
+        return res.status(500).json({ success: false, message: "Server error" });
     }
 }
 
