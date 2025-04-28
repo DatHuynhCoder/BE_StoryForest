@@ -84,3 +84,31 @@ export const getFavorite = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 }
+
+export const checkFavorite = async (req,res) => {
+  try {
+    const userID = req.user.id;
+    const bookID = req.query.bookId;
+    //check if book in favorite list
+    const favorite = await Favorite.findOne({userId: userID});
+
+    //If user dont have a favorite list, return status: not in favorite
+    if(!favorite){
+      return res.status(200).json({success: true, status: false});
+    }
+
+    //Check if book in user favorite list
+    const isFavorite = favorite.bookIds.includes(bookID);
+
+    //If book is not in a favorite list, return status: not in favorite
+    if(!isFavorite){
+      return res.status(200).json({success: true, status: false});
+    }
+
+    //return book in favorite
+    res.status(200).json({success: true, status: true});
+  } catch (error) {
+    console.error("Get favorite error:", err.message);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+}
