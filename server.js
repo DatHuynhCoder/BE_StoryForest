@@ -36,6 +36,7 @@ import homepageRouter from "./routes/user/homepage.route.js";
 // })
 
 import OpenAI from "openai";
+import AdvancedSearchRouter from "./routes/vipreader/advancedSearch.route.js";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_KEY,
@@ -147,6 +148,7 @@ app.use('/api/search', searchRouter)
 
 //api for VIP reader
 app.use('/api/vipreader/texttospeak', texttospeakRouter);
+app.use("/api/vipreader/advanced-search", AdvancedSearchRouter)
 
 //api for user
 app.use('/api/user/', homepageRouter);
