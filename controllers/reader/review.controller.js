@@ -16,8 +16,9 @@ import { BookReview } from "../../models/bookReview.model.js";
 // }
 
 export const createReview = async (req, res) => {
+  const userid = req.user.id
   try {
-    const { content, rating, chapternumber, chaptertitle, chapterid, userid, username, bookid } = req.body;
+    const { content, rating, chapternumber, chaptertitle, chapterid, username, bookid } = req.body;
 
     // Create a new review
     const newReview = await BookReview.create({
@@ -50,7 +51,10 @@ export const getAllReviews = async (req, res) => {
 
 export const getReviewsByBookId = async (req, res) => {
   try {
-    const reviews = await BookReview.find({ bookid: req.params.bookid });
+    const reviews = await BookReview.find({ bookid: req.params.bookid }).populate({
+      path: 'userid',
+      select: 'username avatar' // Replace 'name email' with the fields you want to retrieve from the user model
+    });
     return res.status(200).json({ success: true, data: reviews });
   } catch (error) {
     console.error("Error in get reviews: ", error.message);
@@ -60,12 +64,22 @@ export const getReviewsByBookId = async (req, res) => {
 
 export const getReviewByChapterId = async (req, res) => {
   try {
-    const reviews = await BookReview.find({ chapterid: req.params.chapterid });
+    const reviews = await BookReview.find({ chapterid: req.params.chapterid }).populate({
+      path: 'userid',
+      select: 'username avatar' // Replace 'name email' with the fields you want to retrieve from the user model
+    });
     return res.status(200).json({ success: true, data: reviews });
   } catch (error) {
     console.error("Error in get reviews: ", error.message);
     return res.status(500).json({ success: false, message: "Server error" });
   }
+  // try {
+  //   const reviews = await BookReview.find({ chapterid: req.params.chapterid });
+  //   return res.status(200).json({ success: true, data: reviews });
+  // } catch (error) {
+  //   console.error("Error in get reviews: ", error.message);
+  //   return res.status(500).json({ success: false, message: "Server error" });
+  // }
 }
 
 export const getReviewByUserIdAndChapterid = async (req, res) => {
