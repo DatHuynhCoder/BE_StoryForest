@@ -93,7 +93,7 @@ export const AdvancedSearch = async (req, res) => {
     });
 
     // Chỉ trả về top N kết quả nếu muốn (ví dụ 5 kết quả)
-    const topResults = results.slice(0, 10);
+    const topResults = results.slice(0, 20);
 
     if (topResults.length > 0) {
       const matchedIds = topResults.map(r => r.matched_id);
