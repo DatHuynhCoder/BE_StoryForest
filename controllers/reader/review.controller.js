@@ -1,4 +1,6 @@
 import { BookReview } from "../../models/bookReview.model.js";
+import { Account } from "../../models/account.model.js";
+import { changeExp, checkLevelChange } from "../../utils/levelSystem.js";
 
 // {
 //   content: { type: String, required: true },
@@ -19,6 +21,19 @@ export const createReview = async (req, res) => {
   const userid = req.user.id
   try {
     const { content, rating, chapternumber, chaptertitle, chapterid, username, bookid } = req.body;
+    //Get the user to increase exp
+    const user = await Account.findById(req.user.id).select("exp level rank");
+
+    //increase exp of user
+    const newexp = changeExp('comment', user.exp, req.user.role);
+    user.exp = newexp;
+    //check level change
+    const { level, rank } = checkLevelChange(user.exp);
+    user.level = level;
+    user.rank = rank;
+
+    //save the updated user
+    await user.save();
 
     // Create a new review
     const newReview = await BookReview.create({
@@ -32,7 +47,7 @@ export const createReview = async (req, res) => {
       bookid
     });
 
-    return res.status(201).json({ success: true, data: newReview });
+    return res.status(201).json({ success: true, data: newReview, user: user });
   } catch (error) {
     console.error("Error in create review: ", error.message);
     return res.status(500).json({ success: false, message: "Server error" });
