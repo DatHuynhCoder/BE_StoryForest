@@ -8,13 +8,14 @@ import {
   deleteReview,
   updateReview
 } from '../../controllers/reader/review.controller.js';
+import { protect } from '../../middleware/authMiddleware.js';
 
 // app.use("/api/reader/review", reviewRouter);
 
 const reviewRouter = express.Router();
 
 //Create an review
-reviewRouter.post('/create', createReview);
+reviewRouter.post('/create', protect, createReview);
 
 //Get all review
 reviewRouter.get('/all', getAllReviews);
