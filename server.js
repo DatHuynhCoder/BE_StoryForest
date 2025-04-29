@@ -10,6 +10,7 @@ import axios from "axios";
 import cookieParser from "cookie-parser";
 import crypto from "crypto";
 import moment from "moment";
+import PayOS from "@payos/node";
 
 import { Book } from "./models/book.model.js";
 
@@ -45,6 +46,8 @@ app.use(cookieParser()); //use Cookies to store token
 app.use(cors({ origin: "http://localhost:5173", credentials: true })); //allow cross origin request
 
 const PORT = process.env.PORT;
+
+const payos = new PayOS('596f2353-7de4-42b8-84ae-217713f717be', '41b0b93f-1fe2-4b40-81d8-96a22b2fee24', '0eed5dc90388324ce053997e49ba6765130e5eff3c661a9f595086847a4d1c17')
 
 app.get("/", (req, res) => {
   res.send("<h1>Welcome to Ours Server</h1>");
@@ -211,6 +214,40 @@ app.post('/zalopay-callback', express.json(), (req, res) => {
 
   res.json({ return_code: 1, return_message: 'success' });
 });
+
+const YOUR_DOMAIN = 'http://localhost:5173/payment';
+
+app.post('/create-payment-link', async (req, res) => {
+  const {
+    userid,
+    amount,
+    description
+  } = req.body;
+  const order = {
+    orderCode: 1,
+    amount: 2000,
+    description: "Thanh toan don hang",
+    items: [
+      {
+        name: "Không vip đời không nể",
+        quantity: 1,
+        price: 2000,
+      },
+    ],
+    returnUrl: `${YOUR_DOMAIN}/success`,
+    cancelUrl: `${YOUR_DOMAIN}/cancel`,
+  };
+  const paymentLink = await payos.createPaymentLink(order);
+  return res.json({ url: paymentLink.checkoutUrl });
+})
+
+// webhook-url using ngrok
+// https://a6d5-14-186-73-60.ngrok-free.app/payment-callback
+app.post('/payment-callback', async (req, res) => {
+  console.log(req.body)
+  return res.json()
+})
+
 
 app.listen(PORT, () => {
   connectDB();
