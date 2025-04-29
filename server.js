@@ -26,15 +26,7 @@ import searchRouter from './routes/search.route.js';
 import texttospeakRouter from "./routes/vipreader/texttospeak.route.js";
 import homepageRouter from "./routes/user/homepage.route.js";
 import accountActionRouter from "./routes/user/accountAction.route.js";
-
-// example of how to use the token in the frontend
-// fetch('/api/protected-route', {
-//     method: 'GET',
-//     headers: {
-//         'Authorization': `Bearer ${token}`,
-//         'Content-Type': 'application/json'
-//     }
-// })
+import dailycheckinRouter from "./routes/reader/dailycheckin.route.js";
 
 import OpenAI from "openai";
 
@@ -136,17 +128,20 @@ app.get("/api/suggestion", async (req, res) => {
   }
 });
 
+//api for reader
 app.use("/api/reader/account", accountRouter);
 
 app.use("/api/reader/favorite", favoriteRouter);
 
 app.use("/api/reader/review", reviewRouter);
 
+app.use("/api/reader/dailycheckin", dailycheckinRouter)
+
 app.use("/api/novel", novelRouter);
 
 app.use("/api/manga", mangaRouter);
 
-app.use('/api/search', searchRouter)
+app.use('/api/search', searchRouter);
 
 //api for VIP reader
 app.use('/api/vipreader/texttospeak', texttospeakRouter);

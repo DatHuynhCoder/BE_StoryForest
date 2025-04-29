@@ -1,6 +1,8 @@
 import { Book } from "../../models/book.model.js";
 import { Favorite } from "../../models/favorite.model.js";
 import mongoose from "mongoose";
+import { changeExp, checkLevelChange } from "../../utils/levelSystem.js";
+import { Account } from "../../models/account.model.js";
 
 export const addFavorite = async (req, res) => {
   try {
@@ -22,8 +24,22 @@ export const addFavorite = async (req, res) => {
     //increase followers of book
     book.followers += 1;
 
+    //Get the user to increase exp
+    const user = await Account.findById(userId).select("exp level rank");
+
+    //increase exp of user
+    const newexp = changeExp('favorite', user.exp, req.user.role);
+    user.exp = newexp;
+    //check level change
+    const { level, rank } = checkLevelChange(user.exp);
+    user.level = level;
+    user.rank = rank;
+
     //save the updated book
     await book.save();
+
+    //save the updated user
+    await user.save();
 
     const favorite = await Favorite.findOneAndUpdate(
       { userId },
@@ -31,9 +47,9 @@ export const addFavorite = async (req, res) => {
       { new: true, upsert: true }
     );
 
-    res.status(200).json({ success: true, data: favorite });
+    res.status(200).json({ success: true, data: favorite, user: user });
   } catch (error) {
-    console.error("Add to favorite error:", err.message);
+    console.error("Add to favorite error:", error.message);
     res.status(500).json({ success: false, message: "Server error" });
   }
 }
@@ -65,7 +81,7 @@ export const deleteFavorite = async (req, res) => {
 
     res.status(200).json({ success: true, data: favorite });
   } catch (error) {
-    console.error("Delete favorite error:", err.message);
+    console.error("Delete favorite error:", error.message);
     res.status(500).json({ success: false, message: "Server error" });
   }
 }
@@ -80,7 +96,7 @@ export const getFavorite = async (req, res) => {
 
     res.status(200).json({ success: true, data: favorite.bookIds });
   } catch (error) {
-    console.error("Get favorite error:", err.message);
+    console.error("Get favorite error:", error.message);
     res.status(500).json({ success: false, message: "Server error" });
   }
 }
@@ -108,7 +124,7 @@ export const checkFavorite = async (req,res) => {
     //return book in favorite
     res.status(200).json({success: true, status: true});
   } catch (error) {
-    console.error("Get favorite error:", err.message);
+    console.error("Get favorite error:", error.message);
     res.status(500).json({ success: false, message: "Server error" });
   }
 }

@@ -1,3 +1,4 @@
+import { Account } from "../../models/account.model.js";
 import { Book } from "../../models/book.model.js";
 
 export const getHomepage = async (req, res) => {
@@ -6,7 +7,7 @@ export const getHomepage = async (req, res) => {
     const latestManga = await Book.find({ type: 'manga' })
       .sort({ updatedAt: -1 })
       .limit(15)
-      .select('_id bookImg title type')
+      .select('_id bookImg title type views rate synopsis')
 
     //check if 15 manga exist
     if (!latestManga) {
@@ -17,7 +18,7 @@ export const getHomepage = async (req, res) => {
     const latestNovel = await Book.find({ type: 'novel' })
       .sort({ updateAt: -1 })
       .limit(15)
-      .select('_id bookImg title type')
+      .select('_id bookImg title type views rate synopsis')
 
     //Check if 15 novel exist
     if (!latestNovel) {
@@ -28,7 +29,7 @@ export const getHomepage = async (req, res) => {
     const trendBooks = await Book.find({})
       .sort({ views: -1 })
       .limit(15)
-      .select('_id bookImg title type')
+      .select('_id bookImg title type views rate synopsis')
 
     //Check if 15 trendBook exist
     if (!trendBooks) {
@@ -39,11 +40,22 @@ export const getHomepage = async (req, res) => {
     const completeBooks = await Book.find({ status: 'completed' })
       .sort({ views: -1 })
       .limit(15)
-      .select('_id bookImg title type')
+      .select('_id bookImg title type views rate synopsis')
 
     //Check if 15 book completed exist
     if (!completeBooks) {
       return res.status(400).json({ success: false, message: "Cannot find complete books data" });
+    }
+
+    //get top 5 account base on exp
+    const top5account = await Account.find({})
+      .sort({exp: -1})
+      .limit(5)
+      .select('_id username avatar exp level rank')
+    
+    //check if top5account exist
+    if(!top5account){
+      return res.status(400).json({ success: false, message: "Cannot find top 5 account ranking" });
     }
 
     res.status(200).json({
@@ -51,7 +63,8 @@ export const getHomepage = async (req, res) => {
       latestManga: latestManga,
       latestNovel: latestNovel,
       trendBooks: trendBooks,
-      completeBooks: completeBooks
+      completeBooks: completeBooks,
+      top5account: top5account
     })
 
   } catch (error) {
