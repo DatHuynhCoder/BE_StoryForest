@@ -1,21 +1,38 @@
 import express from 'express';
-import { createReview, getAllReviews, getReviewsByBookId, deleteReview, updateReview } from '../../controllers/reader/review.controller.js';
+import {
+  createReview,
+  getAllReviews,
+  getReviewsByBookId,
+  getReviewByChapterId,
+  getReviewByUserIdAndChapterid,
+  deleteReview,
+  updateReview
+} from '../../controllers/reader/review.controller.js';
+import { protect } from '../../middleware/authMiddleware.js';
+
+// app.use("/api/reader/review", reviewRouter);
 
 const reviewRouter = express.Router();
 
 //Create an review
-reviewRouter.post('/create', createReview);
+reviewRouter.post('/create', protect, createReview);
 
 //Get all review
 reviewRouter.get('/all', getAllReviews);
 
-//get review by bookId
-reviewRouter.get('/:bookId', getReviewsByBookId);
+//get review by bookid
+reviewRouter.get('/book/:bookid', getReviewsByBookId);
+
+// get review by chapterid
+reviewRouter.get('/chapter/:chapterid', getReviewByChapterId);
+
+// get review by userid and chapterid
+reviewRouter.get('/user/:userid/:chapterid', getReviewByUserIdAndChapterid);
 
 //delete a review
-reviewRouter.delete('/:id', deleteReview);
+reviewRouter.delete('/:reviewid', deleteReview);
 
 //update a review
-reviewRouter.put('/:id', updateReview);
+reviewRouter.patch('/:userid/:chapterid', updateReview);
 
 export default reviewRouter;

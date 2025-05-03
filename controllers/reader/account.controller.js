@@ -26,7 +26,7 @@ export const refreshToken = async (req, res) => {
 		const accessToken = jwt.sign(
 			{ id: account._id, role: account.role },
 			process.env.JWT_SECRET,
-			{ expiresIn: '3m' }
+			{ expiresIn: '15m' }
 		);
 
 		console.log("token refresh!")
@@ -84,7 +84,7 @@ export const loginAccount = async (req, res) => {
 		const accessToken = jwt.sign(
 			{ id: account._id, role: account.role },
 			process.env.JWT_SECRET,
-			{ expiresIn: '3m' }
+			{ expiresIn: '15m' }
 		);
 
 		const refreshToken = jwt.sign(
@@ -237,6 +237,71 @@ export const getAccount = async (req, res) => {
 		res.status(200).json({ success: true, data: account })
 	} catch (error) {
 		console.error("Error in update account: ", error.message);
+		return res.status(500).json({ success: false, message: "Server error" });
+	}
+}
+
+//Update property about
+export const updateAbout = async (req, res) => {
+	try {
+		//get account
+		const accountId = req.user.id;
+		const account = await Account.findById(accountId);
+
+		//get about data
+		const { about } = req.body;
+
+		//check if account exist
+		if (!account) {
+			return res.status(404).json({ success: false, message: "Account not found" });
+		}
+
+		//check about exist
+		if (!about) {
+			return res.status(404).json({ success: false, message: "About account not found" });
+		}
+
+		//update new about
+		account.about = about;
+
+		//save the update data
+		await account.save();
+
+		res.status(200).json({ success: true, message: "Update new about successfully!", data: account })
+	} catch (error) {
+		console.error("Error in update about account: ", error.message);
+		return res.status(500).json({ success: false, message: "Server error" });
+	}
+}
+
+//Change password
+export const changePass = async (req, res) => {
+	try {
+		const userID = req.user.id;
+		const account = await Account.findById(userID);
+		//Check if account exist
+		if (!account) {
+			return res.status(404).json({ success: false, message: "account not found" });
+		}
+
+		//get pass and newpass
+		const { password, newpassword } = req.body;
+
+		//Check if password match account password
+		const isMatch = await account.matchPassword(password);
+		if (!isMatch) {
+			return res.status(401).json({ success: false, message: "Password doesn't match" });
+		}
+
+		//Change to new password (account has hash function so we dont need to use it here)
+		account.password = newpassword;
+
+		//update account
+		await account.save();
+
+		res.status(200).json({ success: true, message: "Change password sucessfully!" });
+	} catch (error) {
+		console.error("Error in update about account: ", error.message);
 		return res.status(500).json({ success: false, message: "Server error" });
 	}
 }

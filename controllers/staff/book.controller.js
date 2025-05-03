@@ -62,7 +62,7 @@ export const getBook = async (req, res) => {
   try {
     //get book by id
     const bookId = req.params.id;
-    const book = await Book.findById(bookId).populate('authorId', 'name'); //Use populate to get author name from Author
+    const book = await Book.findById(bookId); //Use populate to get author name from Author
     //If you delete the author, the authorId in the book will be null
 
     //check if book not found
@@ -100,3 +100,68 @@ export const deleteBook = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error" });
   }
 }
+
+export const updateBook = async (req, res) => {
+  try {
+    const bookId = req.params.id;
+    let book = await Book.findById(bookId);
+
+    if (!book) {
+      return res.status(404).json({ success: false, message: "Book not found" });
+    }
+
+    // Parse tag
+    let tag = [];
+    if (req.body.tag) {
+      try {
+        tag = typeof req.body.tag === 'string' ? JSON.parse(req.body.tag) : req.body.tag;
+      } catch (error) {
+        return res.status(400).json({ success: false, message: "Invalid tag data" });
+      }
+    }
+
+    let updatedData = {
+      name: req.body.name || book.name,
+      description: req.body.description || book.description,
+      type: req.body.type || book.type,
+      tag: tag.length ? tag : book.tag,
+      pages: req.body.pages || book.pages,
+      status: req.body.status || book.status,
+      numChapter: req.body.numChapter || book.numChapter,
+      authorId: req.body.authorId || book.authorId,
+      publishDate: req.body.publishDate || book.publishDate,
+    };
+
+    // If new image is uploaded
+    if (req.file) {
+      // Delete old image
+      await cloudinary.uploader.destroy(book.bookImg.public_id);
+
+      // Upload new image
+      const uploadedImg = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'StoryForest/Book',
+        transformation: [
+          { width: 800, height: 800, crop: "limit" },
+          { quality: "auto" },
+          { fetch_format: "auto" }
+        ]
+      });
+
+      updatedData.bookImg = {
+        url: uploadedImg.secure_url,
+        public_id: uploadedImg.public_id
+      };
+
+      // Delete temp file
+      req.file && deleteTempFiles([req.file]);
+    }
+
+    // Update the book
+    const updatedBook = await Book.findByIdAndUpdate(bookId, updatedData, { new: true });
+
+    res.status(200).json({ success: true, data: updatedBook });
+  } catch (error) {
+    console.error("Error in update book: ", error.message);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};

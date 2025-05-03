@@ -24,12 +24,16 @@ const AccountSchema = new mongoose.Schema({
     enum: ['admin', 'user', 'VIP reader', 'staff', 'reader'],
     default: 'reader'
   },
-  favorites: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'Book',
-    }
-  ]
+  achivement: {
+    type: String,
+    default: 'New Member'
+  },
+  about: { type: [String], default: [] },
+  exp: { type: Number, default: 0 },
+  level: { type: Number, default: 0 },
+  rank: { type: String, default: 'Bronze'},
+  lastcheckin: {type: Date, default: Date.now()},
+  streak: { type: Number, default: 0 },
 }, {
   timestamps: true
 })
