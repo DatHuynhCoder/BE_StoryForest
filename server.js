@@ -29,6 +29,9 @@ import homepageRouter from "./routes/user/homepage.route.js";
 import accountActionRouter from "./routes/user/accountAction.route.js";
 import dailycheckinRouter from "./routes/reader/dailycheckin.route.js";
 
+// admin 
+import adminRouter from "./routes/admin/admin.route.js";
+
 import OpenAI from "openai";
 
 const openai = new OpenAI({
@@ -253,3 +256,6 @@ app.listen(PORT, () => {
   connectDB();
   console.log(`Server start at http://localhost:${PORT}`);
 });
+
+app.use('/api/admin', adminRouter);
+
