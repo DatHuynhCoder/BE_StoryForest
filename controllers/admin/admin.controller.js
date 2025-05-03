@@ -1,5 +1,4 @@
-import { Account } from '../models/account.model.js';
-import { generatePaginationParams } from '../utils/pagination.js';
+import { Account } from '../../models/account.model.js';
 import bcrypt from 'bcryptjs';
 
 // [GET] /api/admin/users/summary - Tổng hợp số lượng user và staff
@@ -152,7 +151,7 @@ export const getDailyUserStats = async (req, res) => {
 
 // [GET] /api/admin/accounts - Lấy danh sách tài khoản 
 // GET /api/admin/accounts?search=ttmq&accountType=user&page=1&limit=5
-exports.getAccounts = async (req, res) => {
+export const getAccounts = async (req, res) => {
     try {
       const { 
         page = 1,
