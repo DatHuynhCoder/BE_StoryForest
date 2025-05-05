@@ -31,6 +31,7 @@ import dailycheckinRouter from "./routes/reader/dailycheckin.route.js";
 
 // admin 
 import adminRouter from "./routes/admin/admin.route.js";
+import dashboardRouter from "./routes/admin/dashboard.route.js";
 
 import OpenAI from "openai";
 
@@ -133,6 +134,10 @@ app.get("/api/suggestion", async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error" });
   }
 });
+//api for admin
+app.use('/api/admin', adminRouter);
+
+app.use('/api/admin/dashboard', dashboardRouter);
 
 //api for reader
 app.use("/api/reader/account", accountRouter);
@@ -257,5 +262,4 @@ app.listen(PORT, () => {
   console.log(`Server start at http://localhost:${PORT}`);
 });
 
-app.use('/api/admin', adminRouter);
 
