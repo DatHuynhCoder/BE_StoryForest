@@ -305,3 +305,26 @@ export const changePass = async (req, res) => {
 		return res.status(500).json({ success: false, message: "Server error" });
 	}
 }
+
+export const upgradeVip = async (req, res) => {
+	const { userid } = req.body
+	try {
+		const account = await Account.findById(userid);
+
+		// Check if account exists
+		if (!account) {
+			return res.status(404).json({ success: false, message: "Account not found" });
+		}
+
+		// Update role to 'VIP reader'
+		account.role = "VIP reader";
+
+		// Save the updated account
+		await account.save();
+
+		return res.status(200).json({ success: true, message: "Account upgraded to VIP reader successfully!", data: account });
+	} catch (error) {
+		console.error("Error in upgrading to VIP reader: ", error.message);
+		return res.status(500).json({ success: false, message: "Server error" });
+	}
+}
