@@ -156,78 +156,14 @@ app.use('/api/vipreader/texttospeak', texttospeakRouter);
 app.use('/api/user/homepage', homepageRouter);
 app.use('/api/user/accountAction', accountActionRouter);
 
-const config = {
-  app_id: '2553',
-  key1: 'PcY4iZIKFCIdgZvA6ueMcMHHUbRLYjPL',
-  key2: 'kLtgPl8HHhfvMuDHPwKfgfsY4Ydm9eIz',
-  endpoint: 'https://sb-openapi.zalopay.vn/v2/create',
-  callback_url: 'http://localhost:5000/zalopay-callback',
-};
-
-app.post('/zalopay', async (req, res) => {
-  const { userid } = req.body;
-  const embed_data = {
-    name: "vipmember",
-  }
-  const amount = 1000000; // 1000000 VND
-  const items = ["vip"];
-  const transID = Math.floor(Math.random() * 1000000);
-  const order = {
-    app_id: config.app_id,
-    app_trans_id: `${moment().format('YYMMDD')}_${transID}`,
-    app_user: 'demo_user',
-    app_time: Date.now(),
-    item: JSON.stringify(items),
-    embed_data: JSON.stringify(embed_data),
-    amount,
-    description: `Nâng cấp tài khoản`,
-    bank_code: '',
-    callback_url: config.callback_url,
-  };
-
-  // Tạo chữ ký
-  const data = `${order.app_id}|${order.app_trans_id}|${order.app_user}|${order.amount}|${order.app_time}|${order.embed_data}|${order.item}`;
-  order.mac = crypto.createHmac('sha256', config.key1).update(data).digest('hex');
-
-  try {
-    const result = await axios.post(config.endpoint, null, { params: order });
-    console.log('✅ ZaloPay order created:', result.data);
-    // làm gì đó với kết quả trả về từ ZaloPay, ví dụ: lưu vào DB hoặc gửi lại cho client
-    return res.json({ order_url: result.data.order_url });
-  } catch (err) {
-    console.error(err.response?.data || err);
-    return res.status(500).json({ error: 'Lỗi tạo đơn hàng ZaloPay' });
-  }
-});
-
-// ngrok
-app.post('/zalopay-callback', express.json(), (req, res) => {
-  const dataStr = req.body.data;
-  const reqMac = req.body.mac;
-  const mac = crypto.createHmac('sha256', config.key2).update(dataStr).digest('hex');
-
-  if (reqMac !== mac) {
-    return res.status(400).send('invalid callback');
-  }
-
-  const data = JSON.parse(dataStr);
-  console.log('✅ ZaloPay payment success:', data);
-
-  // 👉 Cập nhật trạng thái đơn hàng trong DB tại đây
-
-  res.json({ return_code: 1, return_message: 'success' });
-});
-
 const YOUR_DOMAIN = 'http://localhost:5173/payment';
 
-app.post('/create-payment-link', async (req, res) => {
-  const {
-    userid,
-    amount,
-    description
-  } = req.body;
+app.post('/create-payment-link', protect, async (req, res) => {
+  const userid = req.user.id
+  // Generate a unique orderCode using timestamp and random number
+  const orderCode = Number(`${Date.now()}${Math.floor(10 + Math.random() * 90)}`); // Example: 16832012345671234
   const order = {
-    orderCode: 1,
+    orderCode: orderCode,
     amount: 2000,
     description: "Thanh toan don hang",
     items: [
@@ -237,7 +173,7 @@ app.post('/create-payment-link', async (req, res) => {
         price: 2000,
       },
     ],
-    returnUrl: `${YOUR_DOMAIN}/success`,
+    returnUrl: `${YOUR_DOMAIN}/success?userid=${userid}`,
     cancelUrl: `${YOUR_DOMAIN}/cancel`,
   };
   const paymentLink = await payos.createPaymentLink(order);
@@ -245,7 +181,7 @@ app.post('/create-payment-link', async (req, res) => {
 })
 
 // webhook-url using ngrok
-// https://a6d5-14-186-73-60.ngrok-free.app/payment-callback
+// ex: https://a6d5-14-186-73-60.ngrok-free.app/payment-callback
 app.post('/payment-callback', async (req, res) => {
   console.log(req.body)
   return res.json()
