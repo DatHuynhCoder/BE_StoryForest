@@ -152,83 +152,172 @@ export const getDailyUserStats = async (req, res) => {
 // [GET] /api/admin/accounts - Lấy danh sách tài khoản 
 // GET /api/admin/accounts?search=ttmq&accountType=user&page=1&limit=5
 export const getAccounts = async (req, res) => {
-    try {
-      const { 
-        page = 1,
-        limit = 10,
-        search = '',
-        role = '',
-        accountType = '' // 'user' hoặc 'staff'
-      } = req.query;
-  
-      const query = {};
-      
-      // Tìm kiếm
-      if (search) {
-        query.$or = [
-          { name: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } },
-          { username: { $regex: search, $options: 'i' } }
-        ];
-      }
-  
-      // Lọc theo loại tài khoản
-      if (accountType === 'staff') {
-        query.role = { $in: ['staff', 'admin'] };
-      } else if (accountType === 'user') {
-        query.role = { $in: ['reader', 'VIP reader'] };
-      }
-  
-      // Lọc role cụ thể (ưu tiên hơn accountType)
-      if (role) {
-        query.role = role;
-      }
-  
-      // Phân trang
-      const currentPage = parseInt(page);
-      const itemsPerPage = parseInt(limit);
-      const skip = (currentPage - 1) * itemsPerPage;
-  
-      // Truy vấn
-      const [accounts, total] = await Promise.all([
-        Account.find(query)
-          .sort({ createdAt: -1 })
-          .skip(skip)
-          .limit(itemsPerPage)
-          .select('username name email phone role avatar createdAt'),
-        
-        Account.countDocuments(query)
-      ]);
-  
-      // Format response
-      const formattedData = accounts.map(account => ({
-        id: account._id,
-        username: account.username,
-        name: account.name || account.username,
-        email: account.email,
-        phone: account.phone,
-        role: account.role,
-        avatar: account.avatar?.url,
-        createdAt: format(account.createdAt, 'HH:mm dd/MM/yyyy'),
-      }));
-  
-      res.json({
-        success: true,
-        data: formattedData,
-        pagination: {
-          total,
-          currentPage,
-          itemsPerPage,
-          totalPages: Math.ceil(total / itemsPerPage)
-        }
-      });
-  
-    } catch (error) {
-      console.error('[ADMIN] Error fetching accounts:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Server error'
-      });
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      search = '',
+      role = '',
+      accountType = '' // 'user' hoặc 'staff'
+    } = req.query;
+
+    const query = {};
+
+    // Tìm kiếm
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { username: { $regex: search, $options: 'i' } }
+      ];
     }
-  };
+
+    // Lọc theo loại tài khoản
+    if (accountType === 'staff') {
+      query.role = { $in: ['staff', 'admin'] };
+    } else if (accountType === 'user') {
+      query.role = { $in: ['reader', 'VIP reader'] };
+    }
+
+    // Lọc role cụ thể (ưu tiên hơn accountType)
+    if (role) {
+      query.role = role;
+    }
+
+    // Phân trang
+    const currentPage = parseInt(page);
+    const itemsPerPage = parseInt(limit);
+    const skip = (currentPage - 1) * itemsPerPage;
+
+    // Truy vấn
+    const [accounts, total] = await Promise.all([
+      Account.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(itemsPerPage)
+        .select('username name email phone role avatar createdAt'),
+
+      Account.countDocuments(query)
+    ]);
+
+    // Format response
+    const formattedData = accounts.map(account => ({
+      id: account._id,
+      username: account.username,
+      name: account.name || account.username,
+      email: account.email,
+      phone: account.phone,
+      role: account.role,
+      avatar: account.avatar?.url,
+      createdAt: format(account.createdAt, 'HH:mm dd/MM/yyyy'),
+    }));
+
+    res.json({
+      success: true,
+      data: formattedData,
+      pagination: {
+        total,
+        currentPage,
+        itemsPerPage,
+        totalPages: Math.ceil(total / itemsPerPage)
+      }
+    });
+
+  } catch (error) {
+    console.error('[ADMIN] Error fetching accounts:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};
+
+export const getUserDetails = async (req, res) => {
+  try {
+    //get user and check if it exist
+    const userID = req.params.userId;
+    const account = await Account.findById(userID);
+    if (!account) {
+      return res.status(404).json({ success: false, message: 'Account not found' });
+    }
+
+    res.status(200).json({ success: true, data: account });
+  } catch (error) {
+    console.error('[ADMIN] Error get user details:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+}
+
+export const createStaff = async (req, res) => {
+  try {
+    const { username, name, email, phone, password, gender, avatar } = req.body;
+    // check if account exists
+    const accountExists = await Account.findOne({ email });
+    if (accountExists) {
+      return res.status(400).json({ success: false, message: 'Account already exists' });
+    }
+
+    //create new account
+    const account = await Account.create({
+      username,
+      email,
+      password,
+      role: 'staff'
+    })
+
+    if (!account) {
+      return res.status(400).json({ success: false, message: 'Invalid account data' });
+    }
+
+    res.status(201).json({ success: true, data: account });
+  } catch (error) {
+    console.error('[ADMIN] Error create staff account:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+}
+
+export const getStaffDetails = async (req, res) => {
+  try {
+    //get user and check if it exist
+    const staffID = req.params.staffId;
+    const account = await Account.findById(staffID);
+    if (!account) {
+      return res.status(404).json({ success: false, message: 'Account not found' });
+    }
+
+    res.status(200).json({ success: true, data: account });
+  } catch (error) {
+    console.error('[ADMIN] Error get staff details:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+}
+
+export const deleteStaff = async (req, res) => {
+  try {
+    const staffID = req.params.staffId;
+    const account = await Account.findById(staffID);
+
+    if (!account) {
+      return res.status(404).json({ success: false, message: "Account not found" });
+    }
+
+    await Account.findByIdAndDelete(staffID);
+    res.status(200).json({ success: true, message: "Staff is deleted" });
+  } catch (error) {
+    console.error('[ADMIN] Error delete staff', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+}
 
