@@ -34,6 +34,7 @@ import adminRouter from "./routes/admin/admin.route.js";
 import dashboardRouter from "./routes/admin/dashboard.route.js";
 
 import OpenAI from "openai";
+import paymentRouter from "./routes/reader/payment.route.js";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_KEY,
@@ -148,6 +149,8 @@ app.use("/api/reader/review", reviewRouter);
 
 app.use("/api/reader/dailycheckin", dailycheckinRouter)
 
+app.use("/api/reader/payment", paymentRouter)
+
 app.use("/api/novel", novelRouter);
 
 app.use("/api/manga", mangaRouter);
@@ -163,34 +166,34 @@ app.use('/api/user/accountAction', accountActionRouter);
 
 const YOUR_DOMAIN = 'http://localhost:5173/payment';
 
-app.post('/create-payment-link', protect, async (req, res) => {
-  const userid = req.user.id
-  // Generate a unique orderCode using timestamp and random number
-  const orderCode = Number(`${Date.now()}${Math.floor(10 + Math.random() * 90)}`); // Example: 16832012345671234
-  const order = {
-    orderCode: orderCode,
-    amount: 2000,
-    description: "Thanh toan don hang",
-    items: [
-      {
-        name: "Không vip đời không nể",
-        quantity: 1,
-        price: 2000,
-      },
-    ],
-    returnUrl: `${YOUR_DOMAIN}/success?userid=${userid}`,
-    cancelUrl: `${YOUR_DOMAIN}/cancel`,
-  };
-  const paymentLink = await payos.createPaymentLink(order);
-  return res.json({ url: paymentLink.checkoutUrl });
-})
+// app.post('/create-payment-link', protect, async (req, res) => {
+//   const userid = req.user.id
+//   // Generate a unique orderCode using timestamp and random number
+//   const orderCode = Number(`${Date.now()}${Math.floor(10 + Math.random() * 90)}`); // Example: 16832012345671234
+//   const order = {
+//     orderCode: orderCode,
+//     amount: 2000,
+//     description: "Thanh toan don hang",
+//     items: [
+//       {
+//         name: "Không vip đời không nể",
+//         quantity: 1,
+//         price: 2000,
+//       },
+//     ],
+//     returnUrl: `${YOUR_DOMAIN}/success?userid=${userid}`,
+//     cancelUrl: `${YOUR_DOMAIN}/cancel`,
+//   };
+//   const paymentLink = await payos.createPaymentLink(order);
+//   return res.json({ url: paymentLink.checkoutUrl });
+// })
 
 // webhook-url using ngrok
 // ex: https://a6d5-14-186-73-60.ngrok-free.app/payment-callback
-app.post('/payment-callback', async (req, res) => {
-  console.log(req.body)
-  return res.json()
-})
+// app.post('/payment-callback', async (req, res) => {
+//   console.log(req.body)
+//   return res.json()
+// })
 
 
 app.listen(PORT, () => {
