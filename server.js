@@ -82,50 +82,6 @@ app.post("/api/admin/viprole/:id", async (req, res) => {
   }
 });
 
-app.get("/api/suggestion", async (req, res) => {
-  try {
-    // Lấy từ khóa tìm kiếm từ query string của request (ví dụ: ?q=truyện isekai)
-    const query = req.query.q;
-
-    // Gửi yêu cầu đến OpenAI API để tìm kiếm thông tin liên quan trong dữ liệu đã nhúng vector và (tùy chọn) trên web
-    const response = await openai.responses.create({
-      model: "gpt-4o", // Sử dụng mô hình GPT-4o mới nhất của OpenAI
-      tools: [
-        {
-          type: "file_search", // Tìm kiếm trong dữ liệu đã được nhúng vector trước đó
-          vector_store_ids: [process.env.VECTOR_ID], // ID của vector store chứa dữ liệu, được lấy từ biến môi trường
-          max_num_results: 20, // Giới hạn tối đa 20 kết quả được trả về
-        },
-        {
-          type: "web_search_preview", // (Tùy chọn) Cho phép tìm kiếm thêm từ web nếu cần
-        },
-      ],
-      input: `
-			Search the file data and select at least 5 and at most 10 stories related to: "${query}".  
-			Only return a valid JSON string that I can copy entirely without causing any errors.  
-			Do not include any text, comments, or markdown symbols.
-			The format must strictly follow this structure:  
-			[{"title": "Story Title", "description": "Story Description"}, {"title": "Story Title", "description": "Story Description"}, ...].
-			`,
-    });
-
-    // Lấy nội dung trả về từ API (dạng chuỗi JSON như đã yêu cầu)
-    const rawText = response.output_text;
-    console.log(rawText)
-
-    // Chuyển chuỗi JSON thành mảng các đối tượng JavaScript
-    const dataObjects = JSON.parse(rawText);
-
-    // Trả dữ liệu về cho client ở dạng JSON
-    return res.status(200).json({ success: true, data: dataObjects });
-  } catch (error) {
-    // In lỗi ra console để dễ debug nếu có sự cố xảy ra (ví dụ: lỗi kết nối, lỗi parse JSON,...)
-    console.log("Error while suggesting books: ", error.message);
-
-    // Gửi phản hồi lỗi về phía client
-    return res.status(500).json({ success: false, message: "Server error" });
-  }
-});
 
 //api for reader
 app.use("/api/reader/account", accountRouter);
