@@ -31,8 +31,11 @@ import dailycheckinRouter from "./routes/reader/dailycheckin.route.js";
 
 // admin 
 import adminRouter from "./routes/admin/admin.route.js";
+import dashboardRouter from "./routes/admin/dashboard.route.js";
 
 import OpenAI from "openai";
+import AdvancedSearchRouter from "./routes/vipreader/advancedSearch.route.js";
+import paymentRouter from "./routes/reader/payment.route.js";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_KEY,
@@ -55,7 +58,6 @@ const payos = new PayOS('596f2353-7de4-42b8-84ae-217713f717be', '41b0b93f-1fe2-4
 app.get("/", (req, res) => {
   res.send("<h1>Welcome to Ours Server</h1>");
 });
-
 
 //API author here
 app.use("/api/staff/author", authorRouter);
@@ -88,51 +90,6 @@ app.post("/api/admin/viprole/:id", async (req, res) => {
   }
 });
 
-app.get("/api/suggestion", async (req, res) => {
-  try {
-    // Lấy từ khóa tìm kiếm từ query string của request (ví dụ: ?q=truyện isekai)
-    const query = req.query.q;
-
-    // Gửi yêu cầu đến OpenAI API để tìm kiếm thông tin liên quan trong dữ liệu đã nhúng vector và (tùy chọn) trên web
-    const response = await openai.responses.create({
-      model: "gpt-4o", // Sử dụng mô hình GPT-4o mới nhất của OpenAI
-      tools: [
-        {
-          type: "file_search", // Tìm kiếm trong dữ liệu đã được nhúng vector trước đó
-          vector_store_ids: [process.env.VECTOR_ID], // ID của vector store chứa dữ liệu, được lấy từ biến môi trường
-          max_num_results: 20, // Giới hạn tối đa 20 kết quả được trả về
-        },
-        {
-          type: "web_search_preview", // (Tùy chọn) Cho phép tìm kiếm thêm từ web nếu cần
-        },
-      ],
-      input: `
-			Search the file data and select at least 2 and at most 10 stories related to: "${query}".  
-			Only return a valid JSON string that I can copy entirely without causing any errors.  
-			Do not include any text, comments, or markdown symbols.
-			Tranla  
-			The format must strictly follow this structure:  
-			[{"title": "Story Title", "description": "Story Description"}, {"title": "Story Title", "description": "Story Description"}, ...].
-			`,
-    });
-
-    // Lấy nội dung trả về từ API (dạng chuỗi JSON như đã yêu cầu)
-    const rawText = response.output_text;
-    console.log(rawText)
-
-    // Chuyển chuỗi JSON thành mảng các đối tượng JavaScript
-    const dataObjects = JSON.parse(rawText);
-
-    // Trả dữ liệu về cho client ở dạng JSON
-    return res.status(200).json({ success: true, data: dataObjects });
-  } catch (error) {
-    // In lỗi ra console để dễ debug nếu có sự cố xảy ra (ví dụ: lỗi kết nối, lỗi parse JSON,...)
-    console.log("Error while suggesting books: ", error.message);
-
-    // Gửi phản hồi lỗi về phía client
-    return res.status(500).json({ success: false, message: "Server error" });
-  }
-});
 
 //api for reader
 app.use("/api/reader/account", accountRouter);
@@ -143,6 +100,8 @@ app.use("/api/reader/review", reviewRouter);
 
 app.use("/api/reader/dailycheckin", dailycheckinRouter)
 
+app.use("/api/reader/payment", paymentRouter)
+
 app.use("/api/novel", novelRouter);
 
 app.use("/api/manga", mangaRouter);
@@ -151,111 +110,15 @@ app.use('/api/search', searchRouter);
 
 //api for VIP reader
 app.use('/api/vipreader/texttospeak', texttospeakRouter);
+app.use("/api/vipreader/advanced-search", AdvancedSearchRouter)
 
 //api for user
 app.use('/api/user/homepage', homepageRouter);
 app.use('/api/user/accountAction', accountActionRouter);
-
-const config = {
-  app_id: '2553',
-  key1: 'PcY4iZIKFCIdgZvA6ueMcMHHUbRLYjPL',
-  key2: 'kLtgPl8HHhfvMuDHPwKfgfsY4Ydm9eIz',
-  endpoint: 'https://sb-openapi.zalopay.vn/v2/create',
-  callback_url: 'http://localhost:5000/zalopay-callback',
-};
-
-app.post('/zalopay', async (req, res) => {
-  const { userid } = req.body;
-  const embed_data = {
-    name: "vipmember",
-  }
-  const amount = 1000000; // 1000000 VND
-  const items = ["vip"];
-  const transID = Math.floor(Math.random() * 1000000);
-  const order = {
-    app_id: config.app_id,
-    app_trans_id: `${moment().format('YYMMDD')}_${transID}`,
-    app_user: 'demo_user',
-    app_time: Date.now(),
-    item: JSON.stringify(items),
-    embed_data: JSON.stringify(embed_data),
-    amount,
-    description: `Nâng cấp tài khoản`,
-    bank_code: '',
-    callback_url: config.callback_url,
-  };
-
-  // Tạo chữ ký
-  const data = `${order.app_id}|${order.app_trans_id}|${order.app_user}|${order.amount}|${order.app_time}|${order.embed_data}|${order.item}`;
-  order.mac = crypto.createHmac('sha256', config.key1).update(data).digest('hex');
-
-  try {
-    const result = await axios.post(config.endpoint, null, { params: order });
-    console.log('✅ ZaloPay order created:', result.data);
-    // làm gì đó với kết quả trả về từ ZaloPay, ví dụ: lưu vào DB hoặc gửi lại cho client
-    return res.json({ order_url: result.data.order_url });
-  } catch (err) {
-    console.error(err.response?.data || err);
-    return res.status(500).json({ error: 'Lỗi tạo đơn hàng ZaloPay' });
-  }
-});
-
-// ngrok
-app.post('/zalopay-callback', express.json(), (req, res) => {
-  const dataStr = req.body.data;
-  const reqMac = req.body.mac;
-  const mac = crypto.createHmac('sha256', config.key2).update(dataStr).digest('hex');
-
-  if (reqMac !== mac) {
-    return res.status(400).send('invalid callback');
-  }
-
-  const data = JSON.parse(dataStr);
-  console.log('✅ ZaloPay payment success:', data);
-
-  // 👉 Cập nhật trạng thái đơn hàng trong DB tại đây
-
-  res.json({ return_code: 1, return_message: 'success' });
-});
-
-const YOUR_DOMAIN = 'http://localhost:5173/payment';
-
-app.post('/create-payment-link', async (req, res) => {
-  const {
-    userid,
-    amount,
-    description
-  } = req.body;
-  const order = {
-    orderCode: 1,
-    amount: 2000,
-    description: "Thanh toan don hang",
-    items: [
-      {
-        name: "Không vip đời không nể",
-        quantity: 1,
-        price: 2000,
-      },
-    ],
-    returnUrl: `${YOUR_DOMAIN}/success`,
-    cancelUrl: `${YOUR_DOMAIN}/cancel`,
-  };
-  const paymentLink = await payos.createPaymentLink(order);
-  return res.json({ url: paymentLink.checkoutUrl });
-})
-
-// webhook-url using ngrok
-// https://a6d5-14-186-73-60.ngrok-free.app/payment-callback
-app.post('/payment-callback', async (req, res) => {
-  console.log(req.body)
-  return res.json()
-})
-
 
 app.listen(PORT, () => {
   connectDB();
   console.log(`Server start at http://localhost:${PORT}`);
 });
 
-app.use('/api/admin', adminRouter);
 

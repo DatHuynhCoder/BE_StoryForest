@@ -3,7 +3,11 @@ import {
   getUserSummary,
   getMonthlyUserStats,
   getDailyUserStats,
-  getAccounts
+  getAccounts,
+  getUserDetails,
+  createStaff,
+  getStaffDetails,
+  deleteStaff
 } from '../../controllers/admin/admin.controller.js';
 
 const adminRouter = express.Router();
@@ -20,7 +24,6 @@ adminRouter.get('/users/daily-stats', getDailyUserStats);
 //Bảng người dùng, nhân viên
 adminRouter.get('/accounts', getAccounts);
 
-/*
 // Chi tiết người dùng
 adminRouter.get('/users/:userId', getUserDetails);
 
@@ -32,5 +35,5 @@ adminRouter.get('/staffs/:staffId', getStaffDetails);
 
 // Xóa nhân viên
 adminRouter.delete('/staffs/:staffId', deleteStaff);
-*/
+
 export default adminRouter;
