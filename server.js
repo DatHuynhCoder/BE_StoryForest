@@ -85,3 +85,4 @@ app.listen(PORT, () => {
 });
 
 
+app.use('/api/admin', adminRouter);

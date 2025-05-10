@@ -1,4 +1,5 @@
 import { Account } from '../../models/account.model.js';
+import { format } from 'date-fns';
 import bcrypt from 'bcryptjs';
 
 // [GET] /api/admin/users/summary - Tổng hợp số lượng user và staff
@@ -89,39 +90,42 @@ export const getMonthlyUserStats = async (req, res) => {
 // [GET] /api/admin/users/daily-stats?year=2023&month=12 - Thống kê user mới theo ngày
 export const getDailyUserStats = async (req, res) => {
   try {
-    const { year, month } = req.query; // năm, tháng cần thống kê 
+    const { year, month } = req.query;
     const yearNum = parseInt(year);
     const monthNum = parseInt(month);
 
-    if (isNaN(yearNum)) {
+    if (isNaN(yearNum) || isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
       return res.status(400).json({
         success: false,
-        message: 'Năm không hợp lệ'
+        message: 'Năm hoặc tháng không hợp lệ'
       });
     }
 
-    // xác định số ngày trong tháng 
-    const daysInMonth = new Date(yearNum, monthNum, 0).getDate();
-    const startDate = new Date(`${year}-${month}-01T00:00:00.000Z`);
-    const endDate = new Date(`${year}-${month}-${daysInMonth}T23:59:59.999Z`);
+    // Tính số ngày trong tháng 
+    const startDate = new Date(Date.UTC(yearNum, monthNum - 1, 1));
+    const endDate = new Date(Date.UTC(yearNum, monthNum, 0, 23, 59, 59, 999));
+    const daysInMonth = endDate.getUTCDate();
 
     const stats = await Account.aggregate([
       {
-        // Lọc các tài khoảng trong tháng được chọn 
+        // Lọc các tài khoản trong tháng được chọn 
         $match: {
-          createdAt: { $gte: startDate, $lte: endDate },
+          createdAt: {
+            $gte: startDate,
+            $lte: endDate
+          },
           role: { $in: ['user', 'VIP reader', 'reader'] }
         }
       },
       {
-        // nhóm theo ngày và đếm số lượng
+        // nhóm theo ngày và đếm số lượng 
         $group: {
-          _id: { $dayOfMonth: "$createdAt" },
+          _id: { $dayOfMonth: { date: "$createdAt", timezone: "UTC" } }, // Xử lý timezone
           count: { $sum: 1 }
         }
       },
-      // định dạng lại kết quả 
       {
+        // định dạng lại kết quả 
         $project: {
           day: "$_id",
           count: 1,
@@ -206,9 +210,9 @@ export const getAccounts = async (req, res) => {
       username: account.username,
       name: account.name || account.username,
       email: account.email,
-      phone: account.phone,
+      phone: account.phone || null,
       role: account.role,
-      avatar: account.avatar?.url,
+      avatar: account.avatar?.url || null,
       createdAt: format(account.createdAt, 'HH:mm dd/MM/yyyy'),
     }));
 
@@ -227,7 +231,7 @@ export const getAccounts = async (req, res) => {
     console.error('[ADMIN] Error fetching accounts:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error'
+      message: error.message || 'Server error'
     });
   }
 };
