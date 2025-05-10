@@ -33,13 +33,8 @@ import dailycheckinRouter from "./routes/reader/dailycheckin.route.js";
 import adminRouter from "./routes/admin/admin.route.js";
 import dashboardRouter from "./routes/admin/dashboard.route.js";
 
-import OpenAI from "openai";
 import AdvancedSearchRouter from "./routes/vipreader/advancedSearch.route.js";
 import paymentRouter from "./routes/reader/payment.route.js";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_KEY,
-});
 
 dotenv.config(); // You can access .env vars globally
 
