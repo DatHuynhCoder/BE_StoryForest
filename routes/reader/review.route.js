@@ -9,13 +9,12 @@ import {
   updateReview
 } from '../../controllers/reader/review.controller.js';
 import { protect } from '../../middleware/authMiddleware.js';
-
-// app.use("/api/reader/review", reviewRouter);
+import { checkRole } from '../../middleware/checkRole.js';
 
 const reviewRouter = express.Router();
 
 //Create an review
-reviewRouter.post('/create', protect, createReview);
+reviewRouter.post('/create', protect, checkRole('admin', 'VIP reader', 'staff', 'reader'), createReview);
 
 //Get all review
 reviewRouter.get('/all', getAllReviews);
