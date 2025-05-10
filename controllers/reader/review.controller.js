@@ -2,21 +2,6 @@ import { BookReview } from "../../models/bookReview.model.js";
 import { Account } from "../../models/account.model.js";
 import { changeExp, checkLevelChange } from "../../utils/levelSystem.js";
 
-// {
-//   content: { type: String, required: true },
-//   rating: { type: Number, default: 0 },
-//   chapternumber: { type: String },
-//   chaptertitle: { type: String },
-//   chapterid: { type: String },
-//   userid: {
-//     type: Schema.Types.ObjectId,
-//     ref: 'Account',
-//     required: true,
-//   },
-//   username: { type: String, required: true },
-//   bookid: { type: String, require: true }
-// }
-
 export const createReview = async (req, res) => {
   const userid = req.user.id
   try {
