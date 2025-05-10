@@ -307,7 +307,7 @@ export const changePass = async (req, res) => {
 }
 
 export const upgradeVip = async (req, res) => {
-	const { userid } = req.body
+	const userid = req.user.id;
 	try {
 		const account = await Account.findById(userid);
 
