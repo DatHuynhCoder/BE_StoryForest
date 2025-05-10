@@ -36,6 +36,7 @@ import dashboardRouter from "./routes/admin/dashboard.route.js";
 import OpenAI from "openai";
 import AdvancedSearchRouter from "./routes/vipreader/advancedSearch.route.js";
 import paymentRouter from "./routes/reader/payment.route.js";
+import displaydataRouter from "./routes/user/displaydata.route.js";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_KEY,
@@ -115,6 +116,7 @@ app.use("/api/vipreader/advanced-search", AdvancedSearchRouter)
 //api for user
 app.use('/api/user/homepage', homepageRouter);
 app.use('/api/user/accountAction', accountActionRouter);
+app.use('/api/user/displaydata', displaydataRouter);
 
 app.listen(PORT, () => {
   connectDB();
