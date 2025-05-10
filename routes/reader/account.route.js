@@ -48,6 +48,7 @@ accountRouter.patch('/about', protect, updateAbout);
 //change pass
 accountRouter.patch('/changepass', protect, changePass);
 
+//upprade VIP
 accountRouter.patch('/upgrade', upgradeVip)
 
 export default accountRouter;
