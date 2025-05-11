@@ -162,7 +162,9 @@ export const getAccounts = async (req, res) => {
       limit = 10,
       search = '',
       role = '',
-      accountType = '' // 'user' hoặc 'staff'
+      accountType = '', // 'user' hoặc 'staff'
+      sortField = 'createdAt',
+      sortOrder = 'desc' // 'asc' hoặc 'desc'
     } = req.query;
 
     const query = {};
@@ -193,10 +195,14 @@ export const getAccounts = async (req, res) => {
     const itemsPerPage = parseInt(limit);
     const skip = (currentPage - 1) * itemsPerPage;
 
+    // Sắp xếp
+    const sortOption = {};
+    sortOption[sortField] = sortOrder === 'asc' ? 1 : -1;
+
     // Truy vấn
     const [accounts, total] = await Promise.all([
       Account.find(query)
-        .sort({ createdAt: -1 })
+        .sort(sortOption)
         .skip(skip)
         .limit(itemsPerPage)
         .select('username name email phone role avatar createdAt'),
