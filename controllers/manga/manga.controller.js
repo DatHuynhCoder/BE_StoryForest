@@ -129,7 +129,6 @@ try {
 
   // Loại bỏ trùng lặp
   const uniqueTags = [...new Set(allTags)];
-  console.log(uniqueTags)
 
   return res.status(200).json({ success: true, data: uniqueTags });
 } catch (err) {
