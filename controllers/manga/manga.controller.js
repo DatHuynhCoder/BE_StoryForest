@@ -115,3 +115,24 @@ export const getMangaImagesByChapterId = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error" })
   }
 }
+
+export const getMangaGenres = async (req, res) => {
+try {
+  const mangas = await Book.find({ type: "manga" }, { tags: 1, _id: 0 }); // chỉ lấy tags
+
+  if (!mangas || mangas.length === 0) {
+    return res.status(400).json({ success: false, message: "No manga found" });
+  }
+
+  // Gộp tất cả các tags lại thành một mảng duy nhất
+  const allTags = mangas.flatMap(manga => manga.tags || []);
+
+  // Loại bỏ trùng lặp
+  const uniqueTags = [...new Set(allTags)];
+
+  return res.status(200).json({ success: true, data: uniqueTags });
+} catch (err) {
+  console.log('Error while getting manga tags: ', err.message);
+  return res.status(500).json({ success: false, message: "Server error" });
+}
+}

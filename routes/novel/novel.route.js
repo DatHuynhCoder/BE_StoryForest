@@ -10,7 +10,8 @@ import {
   getFanFictionNovel,
   getNovelById,
   getChaptersByNovelId,
-  getChapterByIdAndNovelId
+  getChapterByIdAndNovelId,
+  getNovelGenres
 } from '../../controllers/novel/novel.controller.js';
 import { protect } from '../../middleware/authMiddleware.js';
 
@@ -23,6 +24,8 @@ novelRouter.get('/', getAllNovel)
 novelRouter.get('/v2', getNovelByPage)
 // Get all original status novels
 novelRouter.get('/original', getOriginalNovel)
+// Get genres 
+novelRouter.get('/genres', getNovelGenres)
 // Get all Fanfiction status novels
 novelRouter.get('/fanfiction', getFanFictionNovel)
 // Get novel by id
