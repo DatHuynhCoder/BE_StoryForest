@@ -74,6 +74,7 @@ export const AdvancedSearch = async (req, res) => {
       // Không tìm thấy kết quả phù hợp
       res.json({ message: "No match found." });
     }
+
   } catch (error) {
     console.error("Error in advanced search: ", error.message);
 
