@@ -1,5 +1,6 @@
 import express from 'express';
 import { protect } from '../../middleware/authMiddleware.js'; // Assuming you have a middleware for authentication
+import {checkRole} from '../../middleware/checkRole.js';
 import { AdvancedSearch } from '../../controllers/vipreader/advancedSearch.controller.js';
 
 const AdvancedSearchRouter = express.Router();

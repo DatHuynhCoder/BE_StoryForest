@@ -60,8 +60,6 @@ export const AdvancedSearch = async (req, res) => {
       // Lấy danh sách ID khớp
       const matchedIds = topResults.map((r) => r.matched_id);
 
-      console.log(matchedIds); // Debug ID
-
       // Chuyển sang dạng ObjectId để truy vấn MongoDB
       const objectIds = matchedIds.map((id) => new mongoose.Types.ObjectId(id));
 
@@ -70,16 +68,12 @@ export const AdvancedSearch = async (req, res) => {
         _id: { $in: objectIds },
       });
 
-      console.log(response); // Debug kết quả
-
       // Trả về danh sách sách phù hợp
       res.json(response);
     } else {
       // Không tìm thấy kết quả phù hợp
       res.json({ message: "No match found." });
     }
-
-    console.log("advanced search"); // Log hoàn tất xử lý
   } catch (error) {
     console.error("Error in advanced search: ", error.message);
 
