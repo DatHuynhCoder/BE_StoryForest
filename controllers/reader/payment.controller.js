@@ -5,7 +5,7 @@ const payos = new PayOS(
   '0eed5dc90388324ce053997e49ba6765130e5eff3c661a9f595086847a4d1c17'
 )
 
-const YOUR_DOMAIN = 'http://localhost:5173/payment';
+const YOUR_DOMAIN = 'https://storyforest.online/payment';
 
 export const createPaymentLink = async (req, res) => {
   const userid = req.user.id
