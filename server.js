@@ -9,7 +9,8 @@ import authorRouter from './routes/staff/author.route.js';
 import bookRouter from './routes/staff/book.route.js';
 import novelRouter from './routes/novel/novel.route.js';
 import mangaRouter from "./routes/manga/manga.route.js";
-// import chapterRoute from './routes/staff/chapter.route.js';
+
+import chapterRoute from './routes/staff/chapter.route.js';
 import accountRouter from './routes/reader/account.route.js';
 import reviewRouter from './routes/reader/review.route.js';
 import favoriteRouter from './routes/reader/favorite.route.js';
@@ -22,6 +23,8 @@ import dailycheckinRouter from "./routes/reader/dailycheckin.route.js";
 // admin 
 import adminRouter from "./routes/admin/admin.route.js";
 import dashboardRouter from "./routes/admin/dashboard.route.js";
+
+
 
 import AdvancedSearchRouter from "./routes/vipreader/advancedSearch.route.js";
 import paymentRouter from "./routes/reader/payment.route.js";
@@ -50,7 +53,7 @@ app.use("/api/staff/author", authorRouter);
 app.use("/api/staff/book", bookRouter);
 
 //API chapter here
-// app.use("/api/staff/chapter", chapterRoute);
+app.use("/api/staff/chapter", chapterRoute);
 
 
 //api for reader
@@ -86,3 +89,4 @@ app.listen(PORT, () => {
 
 
 app.use('/api/admin', adminRouter);
+

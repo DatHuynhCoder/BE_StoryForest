@@ -3,6 +3,46 @@ import { Book } from "../../models/book.model.js";
 //delete temp files import
 import { deleteTempFiles } from "../../utils/deleteTempFiles.js";
 
+
+export const getAllBooks = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = '', sort = 'newest' } = req.query;
+    const skip = (page - 1) * limit;
+    
+    let query = {};
+    if (search) {
+      query.title = { $regex: search, $options: 'i' };
+    }
+    
+    // Xác định cách sắp xếp
+    let sortOption = { updatedAt: -1 }; // Mặc định: mới nhất
+    if (sort === 'oldest') {
+      sortOption = { updatedAt: 1 };
+    } else if (sort === 'a-z') {
+      sortOption = { title: 1 };
+    } else if (sort === 'z-a') {
+      sortOption = { title: -1 };
+    }
+    
+    const books = await Book.find(query, 'title cover_url updatedAt')
+      .skip(skip)
+      .limit(parseInt(limit))
+      .sort(sortOption);
+      
+    const total = await Book.countDocuments(query);
+    
+    res.status(200).json({ 
+      success: true, 
+      data: books,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit)
+    });
+  } catch (error) {
+    console.error("Error in getAllBooks:", error.message);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 export const createBook = async (req, res) => {
   try {
     //Parse tag string to array

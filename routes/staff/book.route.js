@@ -1,10 +1,12 @@
 import express from 'express';
-import { createBook, deleteBook, getBook, updateBook } from '../../controllers/staff/book.controller.js';
+import { createBook, deleteBook, getBook, updateBook, getAllBooks } from '../../controllers/staff/book.controller.js';
 // multer to handle file upload
 import upload from '../../middleware/multer.js';
 
 const bookRouter = express.Router();
 
+// Get all books
+bookRouter.get("/allbooks", getAllBooks);
 //Create a book
 bookRouter.post('/', upload.single('bookImg'), createBook);
 
