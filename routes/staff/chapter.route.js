@@ -15,3 +15,14 @@
 // chapterRoute.delete('/:id', deleteChapter);
 
 // export default chapterRoute;
+
+import express from 'express'
+import { getChaptersByMangaId } from '../../controllers/staff/chapter.controller.js';
+import { getMangaImagesByChapterId } from '../../controllers/staff/chapter.controller.js';
+
+const chapterRoute = express.Router();
+
+chapterRoute.get('/:mangaid/chapters', getChaptersByMangaId)
+chapterRoute.get('/:chapterid', getMangaImagesByChapterId)
+
+export default chapterRoute;
