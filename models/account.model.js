@@ -32,7 +32,7 @@ const AccountSchema = new mongoose.Schema({
   exp: { type: Number, default: 0 },
   level: { type: Number, default: 0 },
   rank: { type: String, default: 'Bronze'},
-  lastcheckin: {type: Date, default: Date.now()},
+  lastcheckin: {type: Date, default: () => Date.now() - 24 * 60 * 60 * 1000},
   streak: { type: Number, default: 0 },
 }, {
   timestamps: true

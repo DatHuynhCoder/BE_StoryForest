@@ -189,3 +189,24 @@ export const getChapterByIdAndNovelId = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error" })
   }
 }
+
+export const getNovelGenres = async (req, res) => {
+try {
+  const novels = await Book.find({ type: "novel" }, { tags: 1, _id: 0 }); // chỉ lấy tags
+
+  if (!novels || novels.length === 0) {
+    return res.status(400).json({ success: false, message: "No novel found" });
+  }
+
+  // Gộp tất cả các tags lại thành một mảng duy nhất
+  const allTags = novels.flatMap(novel => novel.tags || []);
+
+  // Loại bỏ trùng lặp
+  const uniqueTags = [...new Set(allTags)];
+
+  return res.status(200).json({ success: true, data: uniqueTags });
+} catch (err) {
+  console.log('Error while getting novel tags: ', err.message);
+  return res.status(500).json({ success: false, message: "Server error" });
+}
+}
