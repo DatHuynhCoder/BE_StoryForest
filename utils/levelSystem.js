@@ -15,8 +15,8 @@ export const changeExp = (actionType, exp = 0, role) => {
   return expGain;
 }
 
-const levelThreshold = [500, 2000, 5000, 10000, 20000]
-const rankTable = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond']
+const levelThreshold = [500, 2000, 5000, 10000, 20000, 40000, 80000, 160000]
+const rankTable = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond','Master','Challenger','BOSS']
 
 export const checkLevelChange = (exp = 0) => {
   //Check if user level up

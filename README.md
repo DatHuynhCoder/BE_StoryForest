@@ -63,6 +63,9 @@ JWT_REFRESH_EXPIRES_IN=
 - Run `npm run app` in `backend` and `npm run dev` in `frontend` directories.
 - Ctrl + click on the link display in the terminal
 
+## Our Design
+- [Structure Design](https://drive.google.com/file/d/18xYJh17B0YMIHlQm0kixvrh87Uz981Zm/view?usp=sharing)
+- [UI/UX Design](https://www.figma.com/design/MgHOWUFJYKD3JFOCdivLWd/StoryForest---07---NT208?node-id=4-358&t=RELcnZrUQvG86DKQ-1)
 ## License
 This project is licensed under the MIT License.
 
