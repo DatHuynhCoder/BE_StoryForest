@@ -11,7 +11,8 @@ import {
   getNovelById,
   getChaptersByNovelId,
   getChapterByIdAndNovelId,
-  getNovelGenres
+  getNovelGenres,
+  increaseView
 } from '../../controllers/novel/novel.controller.js';
 import { protect } from '../../middleware/authMiddleware.js';
 
@@ -34,5 +35,7 @@ novelRouter.get('/:id', getNovelById)
 novelRouter.get('/:novelid/chapters', getChaptersByNovelId)
 // Get chapter by _id and novelid
 novelRouter.get('/:novelid/:chapterid', getChapterByIdAndNovelId)
+//increase views
+novelRouter.patch('/increaseview/:novelid', increaseView)
 
 export default novelRouter;
