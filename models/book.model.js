@@ -12,7 +12,7 @@ const BookSchema = new mongoose.Schema({
     cover_url: { type: String },
     type: { type: String },
     artist: { type: [String], default: [] },
-    mangaid: { type: String },
+    mangaid: { type: String, default: ""},
     bookImg: {
         url: String,
         public_id: String

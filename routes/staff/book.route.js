@@ -16,9 +16,9 @@ bookRouter.post('/', protect, checkRole('admin', 'staff'), upload.single('bookIm
 bookRouter.get('/:id', getBook);
 
 //delete a book
-bookRouter.delete('/:id', deleteBook);
+bookRouter.delete('/:id', protect, checkRole('admin', 'staff'), deleteBook);
 
 //update a book
-bookRouter.put('/:id', upload.single('bookImg'), updateBook)
+bookRouter.patch('/:id', protect, checkRole('admin', 'staff'), upload.single('bookImg'), updateBook)
 
 export default bookRouter;

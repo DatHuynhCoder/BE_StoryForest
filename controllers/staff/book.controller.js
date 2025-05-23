@@ -2,6 +2,7 @@ import cloudinary from "../../config/cloudinary.js";
 import { Book } from "../../models/book.model.js";
 //delete temp files import
 import { deleteTempFiles } from "../../utils/deleteTempFiles.js";
+import { randomString } from "../../utils/randomString.js";
 
 
 export const getAllBooks = async (req, res) => {
@@ -43,6 +44,7 @@ export const getAllBooks = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
 export const createBook = async (req, res) => {
   try {
     //Parse tag string to array
@@ -74,6 +76,9 @@ export const createBook = async (req, res) => {
         return res.status(400).json({success: false,message: "Invalid artist"});
       }
     }
+
+    //generate mangaid
+    const mangaid = randomString(20);
 
     //Upload book image to cloudinary
     if (!req.file) {
@@ -108,6 +113,7 @@ export const createBook = async (req, res) => {
       status: req.body.status,
       author,
       artist,
+      mangaid
     });
 
     res.status(201).json({ success: true, data: newBook });
@@ -171,26 +177,45 @@ export const updateBook = async (req, res) => {
       return res.status(404).json({ success: false, message: "Book not found" });
     }
 
-    // Parse tag
-    let tag = [];
-    if (req.body.tag) {
+    //Parse tag string to array
+    let tags = [];
+    if (req.body.tags) {
       try {
-        tag = typeof req.body.tag === 'string' ? JSON.parse(req.body.tag) : req.body.tag;
+        tags = typeof req.body.tags === 'string' ? JSON.parse(req.body.tags) : req.body.tags;
       } catch (error) {
-        return res.status(400).json({ success: false, message: "Invalid tag data" });
+        return res.status(400).json({ success: false, message: "Invalid tags data" });
+      }
+    }
+
+    //Parse author
+    let author = [];
+    if(req.body.author){
+      try {
+        author = typeof req.body.author === 'string' ? JSON.parse(req.body.author) : req.body.author;
+      } catch (error) {
+        return res.status(400).json({success: false,message: "Invalid authors"});
+      }
+    }
+
+    //Parse artist
+    let artist = [];
+    if(req.body.artist){
+      try {
+        artist = typeof req.body.artist === 'string' ? JSON.parse(req.body.artist) : req.body.artist;
+      } catch (error) {
+        return res.status(400).json({success: false,message: "Invalid artist"});
       }
     }
 
     let updatedData = {
-      name: req.body.name || book.name,
-      description: req.body.description || book.description,
+      title: req.body.title || book.title,
+      synopsis: req.body.synopsis || book.synopsis,
       type: req.body.type || book.type,
-      tag: tag.length ? tag : book.tag,
-      pages: req.body.pages || book.pages,
+      tags: tags.length ? tags : book.tags,
+      page: req.body.page || book.page,
       status: req.body.status || book.status,
-      numChapter: req.body.numChapter || book.numChapter,
-      authorId: req.body.authorId || book.authorId,
-      publishDate: req.body.publishDate || book.publishDate,
+      author: author.length ? author : book.author,
+      artist: artist.length ? artist : book.artist
     };
 
     // If new image is uploaded
