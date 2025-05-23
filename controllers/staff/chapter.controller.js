@@ -1,7 +1,6 @@
-// import cloudinary from "../../config/cloudinary.js";
-// import { Chapter } from "../../models/chapter.model.js";
+import cloudinary from "../../config/cloudinary.js";
 // //delete temp files import
-// import { deleteTempFiles } from "../../utils/deleteTempFiles.js";
+import { deleteTempFiles } from "../../utils/deleteTempFiles.js";
 
 // export const createChapter = async (req, res) => { //limit the number of content images to 100 and audio to 1
 //   try {
@@ -29,26 +28,6 @@
 //         public_id: contentImgCloudinary.public_id
 //       });
 //     }
-
-//     //Upload audio to cloudinary
-//     const audioFile = req.files.audio || [];
-//     const audio = [];
-//     for (const file of audioFile) {
-//       const audioCloudinary = await cloudinary.uploader.upload(file.path, {
-//         folder: 'StoryForest/Chapter',
-//         resource_type: "video",
-//         format: "mp3",
-//         audio_codec: "mp3",
-//         bit_rate: "128k"
-//       });
-//       audio.push({
-//         url: audioCloudinary.secure_url,
-//         public_id: audioCloudinary.public_id
-//       });
-//     }
-
-//     //Delete temp uploaded files
-//     deleteTempFiles([...audioFile, ...contentImgFiles]);
 
 //     //Create new chapter
 //     const newChapter = await Chapter.create({
@@ -142,8 +121,8 @@ export const getChaptersByMangaId = async (req, res) => {
     const { mangaid } = req.params
     const chapters = await MangaChapter.find({ mangaid: mangaid })
     const totalChapters = await MangaChapter.countDocuments({ mangaid: mangaid });
-    return res.status(200).json({ 
-      success: true, 
+    return res.status(200).json({
+      success: true,
       data: chapters,
       total: totalChapters
     })
@@ -157,12 +136,21 @@ export const getMangaImagesByChapterId = async (req, res) => {
   try {
     const { chapterid } = req.params
     const images = await MangaImage.find({ chapterId: chapterid })
-    return res.status(200).json({ 
-      success: true, 
+    return res.status(200).json({
+      success: true,
       data: images,
     })
   } catch (err) {
     console.log('Error while getting chapter images: ', err.message)
+    return res.status(500).json({ success: false, message: "Server error" })
+  }
+}
+
+export const createMangaChapter = async (req, res) => {
+  try {
+    
+  } catch (error) {
+    console.log('Error while create new manga chapter: ', err.message)
     return res.status(500).json({ success: false, message: "Server error" })
   }
 }
