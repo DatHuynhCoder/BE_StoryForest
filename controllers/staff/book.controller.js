@@ -46,12 +46,32 @@ export const getAllBooks = async (req, res) => {
 export const createBook = async (req, res) => {
   try {
     //Parse tag string to array
-    let tag = [];
-    if (req.body.tag) {
+    let tags = [];
+    if (req.body.tags) {
       try {
-        tag = typeof req.body.tag === 'string' ? JSON.parse(req.body.tag) : req.body.tag;
+        tags = typeof req.body.tags === 'string' ? JSON.parse(req.body.tags) : req.body.tags;
       } catch (error) {
-        return res.status(400).json({ success: false, message: "Invalid tag data" });
+        return res.status(400).json({ success: false, message: "Invalid tags data" });
+      }
+    }
+
+    //Parse author
+    let author = [];
+    if(req.body.author){
+      try {
+        author = typeof req.body.author === 'string' ? JSON.parse(req.body.author) : req.body.author;
+      } catch (error) {
+        return res.status(400).json({success: false,message: "Invalid authors"});
+      }
+    }
+
+    //Parse artist
+    let artist = [];
+    if(req.body.artist){
+      try {
+        artist = typeof req.body.artist === 'string' ? JSON.parse(req.body.artist) : req.body.artist;
+      } catch (error) {
+        return res.status(400).json({success: false,message: "Invalid artist"});
       }
     }
 
@@ -79,16 +99,15 @@ export const createBook = async (req, res) => {
 
     //create a book
     const newBook = await Book.create({
-      name: req.body.name,
+      title: req.body.title,
       bookImg,
-      description: req.body.description,
+      synopsis: req.body.synopsis,
       type: req.body.type,
-      tag,
-      pages: req.body.pages,
+      tags,
+      page: req.body.page,
       status: req.body.status,
-      numChapter: req.body.numChapter,
-      authorId: req.body.authorId,
-      publishDate: req.body.publishDate,
+      author,
+      artist,
     });
 
     res.status(201).json({ success: true, data: newBook });
@@ -133,6 +152,8 @@ export const deleteBook = async (req, res) => {
 
     //remove the book
     await Book.findByIdAndDelete(bookId);
+
+    //remove all chapter
 
     res.status(200).json({ success: true, message: "Book is deleted" });
   } catch (error) {
