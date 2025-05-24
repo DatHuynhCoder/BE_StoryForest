@@ -9,12 +9,17 @@
 // export default chapterRoute;
 
 import express from 'express'
-import { createMangaChapter, getChaptersByMangaId, getMangaImagesByChapterId } from '../../controllers/staff/chapter.controller.js';
+import { createMangaChapter, getChaptersByMangaId, getChaptersByNovelId, getMangaImagesByChapterId } from '../../controllers/staff/chapter.controller.js';
 import upload from '../../middleware/multer.js'
 
 const chapterRoute = express.Router();
 
+//get mangachapters or novel by id
 chapterRoute.get('/:mangaid/chapters', getChaptersByMangaId)
+
+//get novelchapters by id
+chapterRoute.get('/:novelid/novelchapters', getChaptersByNovelId)
+
 chapterRoute.get('/:chapterid', getMangaImagesByChapterId)
 
 //create a chapter for manga

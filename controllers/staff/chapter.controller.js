@@ -103,6 +103,7 @@ import { deleteTempFiles } from "../../utils/deleteTempFiles.js";
 import { Book } from "../../models/book.model.js";
 import { MangaChapter } from "../../models/mangachapter.model.js";
 import { MangaImage } from "../../models/mangaimage.model.js";
+import { NovelChapter } from "../../models/novelchapter.model.js";
 
 
 export const getMangaDetails = async (req, res) => {
@@ -116,6 +117,23 @@ export const getMangaDetails = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error" })
   }
 }
+
+export const getChaptersByNovelId = async (req, res) => {
+  try {
+    const { novelid } = req.params
+    const chapters = await NovelChapter.find({novelid: novelid}).sort({order: 1});
+    const totalChapters = await NovelChapter.countDocuments({novelid: novelid});
+    return res.status(200).json({
+      success: true,
+      data: chapters,
+      total: totalChapters
+    })
+  } catch (err) {
+    console.log('Error while getting chapters: ', err.message)
+    return res.status(500).json({ success: false, message: "Server error" })
+  }
+}
+
 export const getChaptersByMangaId = async (req, res) => {
   try {
     const { mangaid } = req.params
