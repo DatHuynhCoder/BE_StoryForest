@@ -162,8 +162,9 @@ export const getChaptersByNovelId = async (req, res) => {
   try {
     const { novelid } = req.params
     const chapters = await NovelChapter.find({ novelid: novelid })
+    const totalChapters = await NovelChapter.countDocuments({_id: novelid});
     if (chapters) {
-      return res.status(200).json({ success: true, data: chapters })
+      return res.status(200).json({ success: true, data: chapters, total: totalChapters })
     }
     else {
       return res.status(400).json({ success: false, message: "Invalid chapters data" })

@@ -1,5 +1,7 @@
 import cloudinary from "../../config/cloudinary.js";
 import { Book } from "../../models/book.model.js";
+import { MangaChapter } from "../../models/mangachapter.model.js";
+import { NovelChapter } from "../../models/novelchapter.model.js";
 //delete temp files import
 import { deleteTempFiles } from "../../utils/deleteTempFiles.js";
 import { randomString } from "../../utils/randomString.js";
@@ -9,12 +11,12 @@ export const getAllBooks = async (req, res) => {
   try {
     const { page = 1, limit = 10, search = '', sort = 'newest' } = req.query;
     const skip = (page - 1) * limit;
-    
+
     let query = {};
     if (search) {
       query.title = { $regex: search, $options: 'i' };
     }
-    
+
     // Xác định cách sắp xếp
     let sortOption = { updatedAt: -1 }; // Mặc định: mới nhất
     if (sort === 'oldest') {
@@ -24,16 +26,16 @@ export const getAllBooks = async (req, res) => {
     } else if (sort === 'z-a') {
       sortOption = { title: -1 };
     }
-    
-    const books = await Book.find(query, 'title cover_url updatedAt')
+
+    const books = await Book.find(query, 'title bookImg updatedAt')
       .skip(skip)
       .limit(parseInt(limit))
       .sort(sortOption);
-      
+
     const total = await Book.countDocuments(query);
-    
-    res.status(200).json({ 
-      success: true, 
+
+    res.status(200).json({
+      success: true,
       data: books,
       total,
       page: parseInt(page),
@@ -59,21 +61,21 @@ export const createBook = async (req, res) => {
 
     //Parse author
     let author = [];
-    if(req.body.author){
+    if (req.body.author) {
       try {
         author = typeof req.body.author === 'string' ? JSON.parse(req.body.author) : req.body.author;
       } catch (error) {
-        return res.status(400).json({success: false,message: "Invalid authors"});
+        return res.status(400).json({ success: false, message: "Invalid authors" });
       }
     }
 
     //Parse artist
     let artist = [];
-    if(req.body.artist){
+    if (req.body.artist) {
       try {
         artist = typeof req.body.artist === 'string' ? JSON.parse(req.body.artist) : req.body.artist;
       } catch (error) {
-        return res.status(400).json({success: false,message: "Invalid artist"});
+        return res.status(400).json({ success: false, message: "Invalid artist" });
       }
     }
 
@@ -154,12 +156,19 @@ export const deleteBook = async (req, res) => {
     }
 
     //delete book image in cloudinary
-    await cloudinary.uploader.destroy(book.bookImg.public_id);
+    if (book.bookImg.public_id != null) {
+      await cloudinary.uploader.destroy(book.bookImg.public_id);
+    }
 
     //remove the book
     await Book.findByIdAndDelete(bookId);
 
     //remove all chapter
+    if (book.type === "manga") {
+      await MangaChapter.deleteMany({ mangaid: book.mangaid })
+    } else {
+      await NovelChapter.deleteMany({ novelid: book._id.toString() })
+    }
 
     res.status(200).json({ success: true, message: "Book is deleted" });
   } catch (error) {
@@ -189,21 +198,21 @@ export const updateBook = async (req, res) => {
 
     //Parse author
     let author = [];
-    if(req.body.author){
+    if (req.body.author) {
       try {
         author = typeof req.body.author === 'string' ? JSON.parse(req.body.author) : req.body.author;
       } catch (error) {
-        return res.status(400).json({success: false,message: "Invalid authors"});
+        return res.status(400).json({ success: false, message: "Invalid authors" });
       }
     }
 
     //Parse artist
     let artist = [];
-    if(req.body.artist){
+    if (req.body.artist) {
       try {
         artist = typeof req.body.artist === 'string' ? JSON.parse(req.body.artist) : req.body.artist;
       } catch (error) {
-        return res.status(400).json({success: false,message: "Invalid artist"});
+        return res.status(400).json({ success: false, message: "Invalid artist" });
       }
     }
 
