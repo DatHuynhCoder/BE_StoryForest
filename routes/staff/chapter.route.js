@@ -23,6 +23,6 @@ chapterRoute.get('/:novelid/novelchapters', getChaptersByNovelId)
 chapterRoute.get('/:chapterid', getMangaImagesByChapterId)
 
 //create a chapter for manga
-chapterRoute.post('/', upload.fields([{ name: 'contentImgs', maxCount: 100 }]), createMangaChapter);
+chapterRoute.post('/manga', upload.fields([{ name: 'contentImgs', maxCount: 100 }]), createMangaChapter);
 
 export default chapterRoute;
