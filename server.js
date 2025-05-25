@@ -46,6 +46,7 @@ app.get("/", (req, res) => {
   res.send("<h1>Welcome to Ours Server</h1>");
 });
 
+//api for staff
 //API author here
 app.use("/api/staff/author", authorRouter);
 
@@ -82,11 +83,13 @@ app.use('/api/user/homepage', homepageRouter);
 app.use('/api/user/accountAction', accountActionRouter);
 app.use('/api/user/displaydata', displaydataRouter);
 
+//api for admin
+app.use('/api/admin', adminRouter);
+
 app.listen(PORT, () => {
   connectDB();
   console.log(`Server start at http://localhost:${PORT}`);
 });
 
 
-app.use('/api/admin', adminRouter);
 

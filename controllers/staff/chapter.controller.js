@@ -104,6 +104,7 @@ import { Book } from "../../models/book.model.js";
 import { MangaChapter } from "../../models/mangachapter.model.js";
 import { MangaImage } from "../../models/mangaimage.model.js";
 import { NovelChapter } from "../../models/novelchapter.model.js";
+import { randomString } from "../../utils/randomString.js";
 
 
 export const getMangaDetails = async (req, res) => {
@@ -121,8 +122,8 @@ export const getMangaDetails = async (req, res) => {
 export const getChaptersByNovelId = async (req, res) => {
   try {
     const { novelid } = req.params
-    const chapters = await NovelChapter.find({novelid: novelid}).sort({order: 1});
-    const totalChapters = await NovelChapter.countDocuments({novelid: novelid});
+    const chapters = await NovelChapter.find({ novelid: novelid }).sort({ order: 1 });
+    const totalChapters = await NovelChapter.countDocuments({ novelid: novelid });
     return res.status(200).json({
       success: true,
       data: chapters,
@@ -166,8 +167,55 @@ export const getMangaImagesByChapterId = async (req, res) => {
 
 export const createMangaChapter = async (req, res) => {
   try {
-    
-  } catch (error) {
+    //get infomation
+    const { title, chapter, volume } = req.body;
+
+    //upload mangaimgs to cloudinary
+    const mangaFiles = req.files['contentImgs'] || [];
+    const mangaImgs = [];
+    for (const file of mangaFiles) {
+      const mangaImg = await cloudinary.uploader.upload(file.path, {
+        folder: 'StoryForest/Chapter',
+        transformation: [
+          { width: 800, height: 800, crop: "limit" },
+          { quality: "auto" },
+          { fetch_format: "auto" }
+        ]
+      });
+
+      mangaImgs.push({
+        url: mangaImg.secure_url,
+        public_id: mangaImg.public_id
+      });
+    }
+
+    //delete the temp files
+    req.files && deleteTempFiles(mangaFiles);
+
+    //create new manga chapter
+    const newChapter = await MangaChapter.create({
+      title,
+      chapter,
+      volume,
+      pages: mangaImgs.length,
+      publishDate: new Date().toISOString(),
+      mangaid: req.body.mangaid,
+      chapterid: `${randomString(20)}-${Date.now()}`
+    });
+
+    //create new manga images
+    await MangaImage.create({
+      chapterId: newChapter.chapterid,
+      images: mangaImgs
+    });
+
+    //return the new chapter
+    return res.status(201).json({
+      success: true,
+      data: newChapter,
+      message: "New manga chapter created successfully"
+    });
+  } catch (err) {
     console.log('Error while create new manga chapter: ', err.message)
     return res.status(500).json({ success: false, message: "Server error" })
   }
