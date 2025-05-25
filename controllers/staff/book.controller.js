@@ -111,7 +111,6 @@ export const createBook = async (req, res) => {
       synopsis: req.body.synopsis,
       type: req.body.type,
       tags,
-      page: req.body.page,
       status: req.body.status,
       author,
       artist,
