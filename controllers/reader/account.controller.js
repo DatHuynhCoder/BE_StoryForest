@@ -1,6 +1,7 @@
 import { Account } from "../../models/account.model.js";
 import cloudinary from "../../config/cloudinary.js";
 import jwt from 'jsonwebtoken';
+import { OAuth2Client } from "google-auth-library";
 //delete temp files import
 import { deleteTempFiles } from "../../utils/deleteTempFiles.js";
 
@@ -108,6 +109,52 @@ export const loginAccount = async (req, res) => {
 	}
 };
 
+const client_id = process.env.GG_CLIENT_ID
+const client = new OAuth2Client(client_id)
+
+async function verifyToken(token) {
+	const ticket = await client.verifyIdToken({
+		idToken: token,
+		audience: client_id
+	})
+	const payload = ticket.getPayload()
+	// xử lí payload, ví dụ: lưu thông tin người dùng vào database
+	return payload
+}
+
+export const loginAccountWithGoogle = async (req, res) => {
+	const { token } = req.body
+	const payload = await verifyToken(token)
+	const { email, name, sub } = payload
+
+	const accountExists = await Account.findOne({ email });
+
+	if (accountExists) {
+		return res.status(201).json({ success: true, data: email, message: 'Account already exists' });
+	}
+
+	try {
+		const account = await Account.create({
+			username: name,
+			name: name,
+			email: email,
+			phone: "",
+			password: "******",
+			gender: "Không tiện tiết lộ",
+			avatar: "",
+			role: "reader"
+		})
+		// const account = await newAccount.save();
+		if (account) {
+			return res.status(201).json({ success: true, data: email });
+		} else {
+			return res.status(400).json({ success: false, message: 'Invalid account data' });
+		}
+	} catch (error) {
+		console.error("Error in create account: ", error.message);
+		return res.status(500).json({ success: false, message: "Server error" });
+	}
+}
 
 export const logoutAccount = async (req, res) => {
 	try {
