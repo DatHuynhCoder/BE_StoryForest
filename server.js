@@ -56,6 +56,13 @@ app.use(express.urlencoded({ extended: true })); //allow to handle url encoded d
 app.use(cookieParser()); //use Cookies to store token
 app.use(cors({ origin: "http://localhost:5173", credentials: true })); //allow cross origin request
 
+if (process.env.NODE_ENV !== 'development') {
+  app.use((req, res, next) => {
+    req.url = req.url.replace(/^\/[^\/]+/, '');
+    next();
+  });
+}
+
 const PORT = process.env.PORT;
 
 app.get("/", (req, res) => {
