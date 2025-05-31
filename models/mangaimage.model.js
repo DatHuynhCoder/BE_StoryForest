@@ -2,10 +2,7 @@ import mongoose, { Schema } from "mongoose";
 
 const MangaImageSchema = new mongoose.Schema({
     chapterId: { type: String, required: true },
-    images: [{
-        url: String,
-        public_id: String
-    }],
+    images: [String],
 }, {
     timestamps: true
 })
