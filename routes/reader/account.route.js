@@ -4,6 +4,7 @@ import upload from '../../middleware/multer.js';
 import {
   createAccount,
   loginAccount,
+  loginAccountWithGoogle,
   deleteAccount,
   getAllAccount,
   updateAccount,
@@ -24,6 +25,9 @@ accountRouter.post('/register', createAccount);
 
 //Login an account
 accountRouter.post('/login', loginAccount);
+
+//Login with google
+accountRouter.post('/auth/google-auth', loginAccountWithGoogle);
 
 //logout an account
 accountRouter.post('/logout', logoutAccount);

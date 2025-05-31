@@ -28,27 +28,9 @@ import AdvancedSearchRouter from "./routes/vipreader/advancedSearch.route.js";
 import paymentRouter from "./routes/reader/payment.route.js";
 import displaydataRouter from "./routes/user/displaydata.route.js";
 
-import { OAuth2Client } from "google-auth-library";
-
-//temp (deleted later)
-import { Account } from "./models/account.model.js";
-
 dotenv.config(); // You can access .env vars globally
 
 const app = express();
-const client_id = process.env.GG_CLIENT_ID
-const client = new OAuth2Client(client_id)
-
-async function verifyToken(token) {
-  const ticket = await client.verifyIdToken({
-    idToken: token,
-    audience: client_id
-  })
-  const payload = ticket.getPayload()
-  // xử lí payload, ví dụ: lưu thông tin người dùng vào database
-  return payload
-}
-
 
 //add middeleware
 app.use(express.json()); //parse json
@@ -101,40 +83,6 @@ app.use('/api/user/displaydata', displaydataRouter);
 
 //api for admin
 app.use('/api/admin', adminRouter);
-
-app.post('/auth/google-auth', async (req, res) => {
-  const { token } = req.body
-  const payload = await verifyToken(token)
-  const { email, name, sub } = payload
-
-  const accountExists = await Account.findOne({ email });
-
-  if (accountExists) {
-    return res.status(201).json({ success: true, data: email, message: 'Account already exists' });
-  }
-
-  try {
-    const account = await Account.create({
-      username: name,
-      name: name,
-      email: email,
-      phone: "",
-      password: "******",
-      gender: "Không tiện tiết lộ",
-      avatar: "",
-      role: "reader"
-    })
-    // const account = await newAccount.save();
-    if (account) {
-      return res.status(201).json({ success: true, data: email });
-    } else {
-      return res.status(400).json({ success: false, message: 'Invalid account data' });
-    }
-  } catch (error) {
-    console.error("Error in create account: ", error.message);
-    return res.status(500).json({ success: false, message: "Server error" });
-  }
-})
 
 app.listen(PORT, () => {
   connectDB();
