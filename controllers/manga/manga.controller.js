@@ -117,22 +117,44 @@ export const getMangaImagesByChapterId = async (req, res) => {
 }
 
 export const getMangaGenres = async (req, res) => {
-try {
-  const mangas = await Book.find({ type: "manga" }, { tags: 1, _id: 0 }); // chỉ lấy tags
+  try {
+    const mangas = await Book.find({ type: "manga" }, { tags: 1, _id: 0 }); // chỉ lấy tags
 
-  if (!mangas || mangas.length === 0) {
-    return res.status(400).json({ success: false, message: "No manga found" });
+    if (!mangas || mangas.length === 0) {
+      return res.status(400).json({ success: false, message: "No manga found" });
+    }
+
+    // Gộp tất cả các tags lại thành một mảng duy nhất
+    const allTags = mangas.flatMap(manga => manga.tags || []);
+
+    // Loại bỏ trùng lặp
+    const uniqueTags = [...new Set(allTags)];
+
+    return res.status(200).json({ success: true, data: uniqueTags });
+  } catch (err) {
+    console.log('Error while getting manga tags: ', err.message);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
-
-  // Gộp tất cả các tags lại thành một mảng duy nhất
-  const allTags = mangas.flatMap(manga => manga.tags || []);
-
-  // Loại bỏ trùng lặp
-  const uniqueTags = [...new Set(allTags)];
-
-  return res.status(200).json({ success: true, data: uniqueTags });
-} catch (err) {
-  console.log('Error while getting manga tags: ', err.message);
-  return res.status(500).json({ success: false, message: "Server error" });
 }
+
+export const increaseView = async (req, res) => {
+  try {
+    const { mangaid } = req.params;
+    const manga = await Book.findById(mangaid);
+    //check if manga exist
+    if(!manga){
+      return res.status(400).json({success: false, message: "Manga does not exist!"});
+    }
+
+    //increase view
+    manga.views = manga.views + 1;
+
+    //save new manga
+    await manga.save();
+
+    res.status(200).json({success: true, message: "Book view increased"});
+  } catch (error) {
+    console.log('Error while increasing View: ', err.message);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
 }

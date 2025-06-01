@@ -24,8 +24,6 @@ import dailycheckinRouter from "./routes/reader/dailycheckin.route.js";
 import adminRouter from "./routes/admin/admin.route.js";
 import dashboardRouter from "./routes/admin/dashboard.route.js";
 
-
-
 import AdvancedSearchRouter from "./routes/vipreader/advancedSearch.route.js";
 import paymentRouter from "./routes/reader/payment.route.js";
 import displaydataRouter from "./routes/user/displaydata.route.js";
@@ -40,12 +38,20 @@ app.use(express.urlencoded({ extended: true })); //allow to handle url encoded d
 app.use(cookieParser()); //use Cookies to store token
 app.use(cors({ origin: "http://localhost:5173", credentials: true })); //allow cross origin request
 
+if (process.env.NODE_ENV !== 'development') {
+  app.use((req, res, next) => {
+    req.url = req.url.replace(/^\/[^\/]+/, '');
+    next();
+  });
+}
+
 const PORT = process.env.PORT;
 
 app.get("/", (req, res) => {
   res.send("<h1>Welcome to Ours Server</h1>");
 });
 
+//api for staff
 //API author here
 app.use("/api/staff/author", authorRouter);
 
@@ -82,11 +88,10 @@ app.use('/api/user/homepage', homepageRouter);
 app.use('/api/user/accountAction', accountActionRouter);
 app.use('/api/user/displaydata', displaydataRouter);
 
+//api for admin
+app.use('/api/admin', adminRouter);
+
 app.listen(PORT, () => {
   connectDB();
   console.log(`Server start at http://localhost:${PORT}`);
 });
-
-
-app.use('/api/admin', adminRouter);
-

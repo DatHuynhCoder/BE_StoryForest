@@ -1,7 +1,7 @@
 import express from 'express';
 // multer to handle file upload
 
-import { getAllManga, getMangaWithFilter, getMangaByStatus, getMangaDetails, getChaptersByMangaId, getMangaImagesByChapterId, getMangaGenres } from '../../controllers/manga/manga.controller.js';
+import { getAllManga, getMangaWithFilter, getMangaByStatus, getMangaDetails, getChaptersByMangaId, getMangaImagesByChapterId, getMangaGenres, increaseView } from '../../controllers/manga/manga.controller.js';
 import { protect } from '../../middleware/authMiddleware.js';
 
 const mangaRouter = express.Router();
@@ -21,5 +21,7 @@ mangaRouter.get('/:_id', getMangaDetails)
 mangaRouter.get('/:mangaid/chapters', getChaptersByMangaId)
 // Get images by chapterid
 mangaRouter.get('/:chapterid/images', getMangaImagesByChapterId)
+// increase views
+mangaRouter.patch('/increaseview/:mangaid', increaseView);
 
 export default mangaRouter;
