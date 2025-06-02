@@ -14,7 +14,6 @@ async function init() {
   // Nếu đã tồn tại file vectors => đọc từ file
   if (fs.existsSync(VECTOR_FILE)) {
     vectors = JSON.parse(fs.readFileSync(VECTOR_FILE));
-    console.log("✅ Loaded vectors from file.");
   } else {
     // Nếu chưa có, bắt đầu tạo embeddings mới từ dữ liệu sách
     console.log("⚙️  Vectors not found. Generating embeddings...");
