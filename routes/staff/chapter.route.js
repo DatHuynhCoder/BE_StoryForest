@@ -1,5 +1,5 @@
 import express from 'express'
-import { createMangaChapter, getChaptersByMangaId, getChaptersByNovelId, getMangaImagesByChapterId, deleteMangaChapter, addPageChapter } from '../../controllers/staff/chapter.controller.js';
+import { createMangaChapter, getChaptersByMangaId, getChaptersByNovelId, getMangaImagesByChapterId, deleteMangaChapter, addPageChapter, deletePageChapter } from '../../controllers/staff/chapter.controller.js';
 import upload from '../../middleware/multer.js'
 import { protect } from '../../middleware/authMiddleware.js';
 import { checkRole } from '../../middleware/checkRole.js';
@@ -24,6 +24,6 @@ chapterRoute.delete('/manga/:chapterid', protect, checkRole("admin", "staff"), d
 chapterRoute.patch('/addpage', protect, checkRole("admin", "staff"), upload.single("pageImg"), addPageChapter)
 
 //Delete a page to the chapter
-
+chapterRoute.patch('/deletepage', protect, checkRole("admin" , "staff"), deletePageChapter)
 
 export default chapterRoute;
