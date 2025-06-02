@@ -208,3 +208,47 @@ export const addPageChapter = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error" })
   }
 }
+
+export const deletePageChapter = async (req, res) => {
+  try {
+    let { chapterid, pageindex } = req.body;
+
+    // Ép kiểu pageindex
+    pageindex = parseInt(pageindex);
+
+    if (isNaN(pageindex)) {
+      return res.status(400).json({ success: false, message: "Invalid page index" });
+    }
+
+    //find the chapter image
+    const chapterImages = await MangaImage.findOne({ chapterId: chapterid });
+    if (!chapterImages) {
+      return res.status(400).json({ success: false, message: "Can't not find the chapter" });
+    }
+
+    //find the chapter
+    const chapter = await MangaChapter.findOne({ chapterid: chapterid });
+    if (!chapter) {
+      return res.status(400).json({ success: false, message: "Can't not find the chapter" });
+    }
+
+    //Get the public_id if image is on cloudinary and delete it on cloudinary
+    if (chapterImages.images[pageindex].includes("@")) {
+      const public_id = chapterImages.images[pageindex].split("@")[1];
+      await cloudinary.uploader.destroy(public_id);
+    }
+
+    //Delete image link from images array
+    chapterImages.images.splice(pageindex, 1);
+    await chapterImages.save();
+
+    //update the chapter pages
+    chapter.pages = chapterImages.images.length;
+    await chapter.save();
+
+    res.status(200).json({success: true, message: "Delete page successfully"});
+  } catch (error) {
+        console.log('Error while adding page to chapter: ', error.message);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+}
