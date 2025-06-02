@@ -44,7 +44,7 @@ export const createPaymentLinkWithOption = async (req, res) => {
         price: amount,
       },
     ],
-    returnUrl: `${YOUR_DOMAIN}/success?userid=${userid}`,
+    returnUrl: `${YOUR_DOMAIN}/success?userid=${userid}&name=${name}`,
     cancelUrl: `${YOUR_DOMAIN}/cancel`,
   };
   const paymentLink = await payos.createPaymentLink(order);
