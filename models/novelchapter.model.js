@@ -4,7 +4,7 @@ const NovelChapterSchema = new mongoose.Schema({
     order: { type: Number, required: true },
     novelid: { type: String, required: true },
     chapter_title: { type: String },
-    chapter_link: { type: String },
+    chapter_link: { type: String, default: '' },
     chapter_content: { type: [String], default: [] },
 }, {
     timestamps: true
