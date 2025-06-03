@@ -36,6 +36,23 @@ export const getChaptersByNovelId = async (req, res) => {
   }
 }
 
+export const getNovelChapterById = async (req, res) => {
+  try {
+    const { chapterid } = req.params
+    const chapter = await NovelChapter.findById(chapterid);
+    if (!chapter) {
+      return res.status(404).json({ success: false, message: "Chapter not found" });
+    }
+    return res.status(200).json({
+      success: true,
+      data: chapter,
+    })
+  } catch (err) {
+    console.log('Error while getting novel chapter: ', err.message)
+    return res.status(500).json({ success: false, message: "Server error" })
+  }
+}
+
 export const getChaptersByMangaId = async (req, res) => {
   try {
     const { mangaid } = req.params
@@ -246,9 +263,85 @@ export const deletePageChapter = async (req, res) => {
     chapter.pages = chapterImages.images.length;
     await chapter.save();
 
-    res.status(200).json({success: true, message: "Delete page successfully"});
+    res.status(200).json({ success: true, message: "Delete page successfully" });
   } catch (error) {
-        console.log('Error while adding page to chapter: ', error.message);
+    console.log('Error while adding page to chapter: ', error.message);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+}
+
+export const createNovelChapter = async (req, res) => {
+  try {
+    //get novel information
+    const { order, novelid, chapter_title, chapter_content } = req.body;
+
+    //check if the chapter already exists
+    const existingChapter = await NovelChapter.findOne({ order, novelid });
+    if (existingChapter) {
+      return res.status(400).json({ success: false, message: "Chapter already exists" });
+    }
+
+    //create new novel chapter
+    const newChapter = await NovelChapter.create({
+      order,
+      novelid,
+      chapter_title,
+      chapter_content: chapter_content ? chapter_content.split('\n') : [],
+    });
+    return res.status(201).json({
+      success: true,
+      data: newChapter,
+      message: "New novel chapter created successfully"
+    });
+
+  } catch (error) {
+    console.log('Error while adding novel chapter: ', error.message);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+}
+
+export const editNovelChapter = async (req, res) => {
+  try {
+    const { chapterid } = req.params;
+    //get update data
+    const updateData = { ...req.body };
+
+    //find the chapter
+    const chapter = await NovelChapter.findOne({ _id: chapterid });
+    if (!chapter) {
+      return res.status(400).json({ success: false, message: "Can't not find the chapter" });
+    }
+
+    //handle chapter content
+    if (updateData.chapter_content) {
+      updateData.chapter_content = updateData.chapter_content.split('\n');
+    }
+    //update the chapter
+    await NovelChapter.findByIdAndUpdate(chapterid, updateData, { new: true });
+    return res.status(200).json({
+      success: true,
+      message: "Chapter updated successfully"
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+}
+
+export const deleteNovelChapter = async (req, res) => {
+  try {
+    const { chapterid } = req.params;
+
+    //find the chapter
+    const chapter = await NovelChapter.findById(chapterid);
+    if (!chapter) {
+      return res.status(400).json({ success: false, message: "Can't not find the chapter" });
+    }
+
+    //Delete the chapter
+    await NovelChapter.deleteOne({ _id: chapterid });
+    return res.status(200).json({ success: true, message: "Chapter deleted successfully" });
+
+  } catch (error) {
     return res.status(500).json({ success: false, message: "Server error" });
   }
 }
