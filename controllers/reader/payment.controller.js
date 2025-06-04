@@ -29,6 +29,28 @@ export const createPaymentLink = async (req, res) => {
   return res.json({ url: paymentLink.checkoutUrl });
 }
 
+export const createPaymentLinkWithOption = async (req, res) => {
+  const userid = req.user.id
+  const { amount, name } = req.body
+  const orderCode = Number(`${Date.now()}${Math.floor(10 + Math.random() * 90)}`); // Example: 16832012345671234
+  const order = {
+    orderCode: orderCode,
+    amount: amount,
+    description: "Thanh toan don hang",
+    items: [
+      {
+        name: name,
+        quantity: 1,
+        price: amount,
+      },
+    ],
+    returnUrl: `${YOUR_DOMAIN}/success?userid=${userid}&name=${name}`,
+    cancelUrl: `${YOUR_DOMAIN}/cancel`,
+  };
+  const paymentLink = await payos.createPaymentLink(order);
+  return res.json({ url: paymentLink.checkoutUrl });
+}
+
 export const paymentCallback = async (req, res) => {
   console.log(req.body)
   return res.json()

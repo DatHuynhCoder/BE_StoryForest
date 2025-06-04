@@ -1,105 +1,6 @@
 import cloudinary from "../../config/cloudinary.js";
 // //delete temp files import
 import { deleteTempFiles } from "../../utils/deleteTempFiles.js";
-
-// export const createChapter = async (req, res) => { //limit the number of content images to 100 and audio to 1
-//   try {
-//     const chapOrder = req.body.chapOrder;
-//     //Check if chapter aldready exists
-//     const compareChap = await Chapter.findOne({ chapOrder: chapOrder });
-//     if (compareChap) {
-//       return res.status(400).json({ success: false, message: "Chapter already exists" });
-//     }
-
-//     //Upload content images to cloudinay
-//     const contentImgFiles = req.files.contentImgs || [];
-//     const contentImgs = [];
-//     for (const file of contentImgFiles) {
-//       const contentImgCloudinary = await cloudinary.uploader.upload(file.path, {
-//         folder: 'StoryForest/Chapter',
-//         transformation: [
-//           { width: 800, height: 800, crop: "limit" },
-//           { quality: "auto" },
-//           { fetch_format: "auto" }
-//         ]
-//       });
-//       contentImgs.push({
-//         url: contentImgCloudinary.secure_url,
-//         public_id: contentImgCloudinary.public_id
-//       });
-//     }
-
-//     //Create new chapter
-//     const newChapter = await Chapter.create({
-//       name: req.body.name,
-//       content: req.body.content,
-//       chapOrder: req.body.chapOrder,
-//       bookId: req.body.bookId,
-//       pages: req.body.pages,
-//       dateAdd: req.body.dateAdd,
-//       contentImgs: contentImgs,
-//       audio: audio
-//     })
-
-//     res.status(201).json({ success: true, data: newChapter })
-
-//   } catch (error) {
-//     console.error("Error in create chapter: ", error.message);
-//     return res.status(500).json({ success: false, message: "Server error" });
-//   }
-// }
-
-// export const getChapter = async (req, res) => {
-//   try {
-//     //get chapter by id
-//     const chapterId = req.params.id;
-//     const chapter = await Chapter.findById(chapterId);
-
-//     //check if chapter is not found
-//     if (!chapter) {
-//       return res.status(404).json({ success: false, message: "chapter not found" });
-//     }
-//     //return chapter
-//     return res.status(200).json({ success: true, data: chapter });
-//   } catch (error) {
-//     console.error("Error in get chapter: ", error.message);
-//     return res.status(500).json({ success: false, message: "Server error" });
-//   }
-// }
-
-// export const deleteChapter = async (req, res) => {
-//   try {
-//     const chapterId = req.params.id;
-//     const chapter = await Chapter.findById(chapterId);
-
-//     //check if chapter is not found
-//     if (!chapter) {
-//       return res.status(404).json({ success: false, message: "chapter not found" });
-//     }
-
-//     //delete chapter images
-//     if(chapter.contentImgs && chapter.contentImgs.length > 0){
-//       for(const img of chapter.contentImgs){
-//         await cloudinary.uploader.destroy(img.public_id);
-//       }
-//     }
-
-//     //Delete chapter audio
-//     if(chapter.audio && chapter.audio.length > 0){
-//       for(const audi of chapter.audio){
-//         await cloudinary.uploader.destroy(audi.public_id);
-//       }
-//     }
-
-//     //delete chapter
-//     await Chapter.findByIdAndDelete(chapterId);
-//     res.status(200).json({ success: true, message: "Chapter is deleted" });
-//   } catch (error) {
-//     console.error("Error in delete chapter: ", error.message);
-//     return res.status(500).json({ success: false, message: "Server error" });
-//   }
-// }
-
 import { Book } from "../../models/book.model.js";
 import { MangaChapter } from "../../models/mangachapter.model.js";
 import { MangaImage } from "../../models/mangaimage.model.js";
@@ -131,6 +32,23 @@ export const getChaptersByNovelId = async (req, res) => {
     })
   } catch (err) {
     console.log('Error while getting chapters: ', err.message)
+    return res.status(500).json({ success: false, message: "Server error" })
+  }
+}
+
+export const getNovelChapterById = async (req, res) => {
+  try {
+    const { chapterid } = req.params
+    const chapter = await NovelChapter.findById(chapterid);
+    if (!chapter) {
+      return res.status(404).json({ success: false, message: "Chapter not found" });
+    }
+    return res.status(200).json({
+      success: true,
+      data: chapter,
+    })
+  } catch (err) {
+    console.log('Error while getting novel chapter: ', err.message)
     return res.status(500).json({ success: false, message: "Server error" })
   }
 }
@@ -183,10 +101,7 @@ export const createMangaChapter = async (req, res) => {
         ]
       });
 
-      mangaImgs.push({
-        url: mangaImg.secure_url,
-        public_id: mangaImg.public_id
-      });
+      mangaImgs.push(mangaImg.secure_url + "@" + mangaImg.public_id);
     }
 
     //delete the temp files
@@ -218,5 +133,215 @@ export const createMangaChapter = async (req, res) => {
   } catch (err) {
     console.log('Error while create new manga chapter: ', err.message)
     return res.status(500).json({ success: false, message: "Server error" })
+  }
+}
+
+export const deleteMangaChapter = async (req, res) => {
+  try {
+    const chapterid = req.params.chapterid;
+
+    //find the chapter
+    const chapter = await MangaChapter.findOne({ chapterid: chapterid });
+    if (!chapter) {
+      return res.status(400).json({ success: false, message: "Can't not find the chapter" });
+    }
+
+    //Delete all manga images
+    const mangaImages = await MangaImage.findOne({ chapterId: chapter.chapterid });
+    if (mangaImages && mangaImages.images && mangaImages.images.length > 0) {
+      for (const img of mangaImages.images) {
+        if (img.includes('@')) {
+          const public_id = img.split('@')[1];
+          await cloudinary.uploader.destroy(public_id);
+        }
+      }
+    }
+    await MangaImage.deleteOne({ chapterId: chapter.chapterid });
+
+    //Delete the chapter
+    await MangaChapter.deleteOne({ chapterid: chapter.chapterid });
+    return res.status(200).json({ success: true, message: "Chapter deleted successfully" });
+
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server error" })
+  }
+}
+
+export const addPageChapter = async (req, res) => {
+  try {
+    let { chapterid, pageindex } = req.body;
+
+    // Ép kiểu pageindex
+    pageindex = parseInt(pageindex);
+
+    if (isNaN(pageindex)) {
+      return res.status(400).json({ success: false, message: "Invalid page index" });
+    }
+
+    //find the chapter image
+    const chapterImages = await MangaImage.findOne({ chapterId: chapterid });
+    if (!chapterImages) {
+      return res.status(400).json({ success: false, message: "Can't not find the chapter" });
+    }
+
+    //find the chapter
+    const chapter = await MangaChapter.findOne({ chapterid: chapterid });
+    if (!chapter) {
+      return res.status(400).json({ success: false, message: "Can't not find the chapter" });
+    }
+
+    //Upload pageImg to cloudinary
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "Chapter image is required" });
+    }
+    const pageImgCloudinary = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'StoryForest/Chapter',
+      transformation: [
+        { width: 800, height: 800, crop: "limit" },
+        { quality: "auto" },
+        { fetch_format: "auto" }
+      ]
+    });
+
+    //add to the chapter images with pageindex
+    const pageImg = pageImgCloudinary.secure_url + "@" + pageImgCloudinary.public_id;
+    chapterImages.images.splice(pageindex, 0, pageImg);
+
+    await chapterImages.save();
+
+    //update the chapter pages
+    chapter.pages = chapterImages.images.length;
+    await chapter.save();
+
+    //delete the temp file
+    req.file && deleteTempFiles([req.file]);
+
+    return res.status(200).json({
+      success: true,
+      message: "New page added successfully",
+    });
+  } catch (error) {
+    console.log('Error while adding page to chapter: ', error.message);
+    return res.status(500).json({ success: false, message: "Server error" })
+  }
+}
+
+export const deletePageChapter = async (req, res) => {
+  try {
+    let { chapterid, pageindex } = req.body;
+
+    // Ép kiểu pageindex
+    pageindex = parseInt(pageindex);
+
+    if (isNaN(pageindex)) {
+      return res.status(400).json({ success: false, message: "Invalid page index" });
+    }
+
+    //find the chapter image
+    const chapterImages = await MangaImage.findOne({ chapterId: chapterid });
+    if (!chapterImages) {
+      return res.status(400).json({ success: false, message: "Can't not find the chapter" });
+    }
+
+    //find the chapter
+    const chapter = await MangaChapter.findOne({ chapterid: chapterid });
+    if (!chapter) {
+      return res.status(400).json({ success: false, message: "Can't not find the chapter" });
+    }
+
+    //Get the public_id if image is on cloudinary and delete it on cloudinary
+    if (chapterImages.images[pageindex].includes("@")) {
+      const public_id = chapterImages.images[pageindex].split("@")[1];
+      await cloudinary.uploader.destroy(public_id);
+    }
+
+    //Delete image link from images array
+    chapterImages.images.splice(pageindex, 1);
+    await chapterImages.save();
+
+    //update the chapter pages
+    chapter.pages = chapterImages.images.length;
+    await chapter.save();
+
+    res.status(200).json({ success: true, message: "Delete page successfully" });
+  } catch (error) {
+    console.log('Error while adding page to chapter: ', error.message);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+}
+
+export const createNovelChapter = async (req, res) => {
+  try {
+    //get novel information
+    const { order, novelid, chapter_title, chapter_content } = req.body;
+
+    //check if the chapter already exists
+    const existingChapter = await NovelChapter.findOne({ order, novelid });
+    if (existingChapter) {
+      return res.status(400).json({ success: false, message: "Chapter already exists" });
+    }
+
+    //create new novel chapter
+    const newChapter = await NovelChapter.create({
+      order,
+      novelid,
+      chapter_title,
+      chapter_content: chapter_content ? chapter_content.split('\n') : [],
+    });
+    return res.status(201).json({
+      success: true,
+      data: newChapter,
+      message: "New novel chapter created successfully"
+    });
+
+  } catch (error) {
+    console.log('Error while adding novel chapter: ', error.message);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+}
+
+export const editNovelChapter = async (req, res) => {
+  try {
+    const { chapterid } = req.params;
+    //get update data
+    const updateData = { ...req.body };
+
+    //find the chapter
+    const chapter = await NovelChapter.findOne({ _id: chapterid });
+    if (!chapter) {
+      return res.status(400).json({ success: false, message: "Can't not find the chapter" });
+    }
+
+    //handle chapter content
+    if (updateData.chapter_content) {
+      updateData.chapter_content = updateData.chapter_content.split('\n');
+    }
+    //update the chapter
+    await NovelChapter.findByIdAndUpdate(chapterid, updateData, { new: true });
+    return res.status(200).json({
+      success: true,
+      message: "Chapter updated successfully"
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+}
+
+export const deleteNovelChapter = async (req, res) => {
+  try {
+    const { chapterid } = req.params;
+
+    //find the chapter
+    const chapter = await NovelChapter.findById(chapterid);
+    if (!chapter) {
+      return res.status(400).json({ success: false, message: "Can't not find the chapter" });
+    }
+
+    //Delete the chapter
+    await NovelChapter.deleteOne({ _id: chapterid });
+    return res.status(200).json({ success: true, message: "Chapter deleted successfully" });
+
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 }
