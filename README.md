@@ -48,6 +48,10 @@ npm run app
 Please go to our Frontend project for more Infomation
 - [FE_StoryForest](https://github.com/DatHuynhCoder/FE_StoryForest)
 
+## ENV file
+Please Download ENV file Here:
+- [ENV Files](https://drive.google.com/file/d/11FY3iYbG9YoOETUFgxyUYYYFIjjY_mse/view?usp=sharing)
+
 ## Environment Variables
 Create a `.env` file in the backend directory with the following variables:
 ```
