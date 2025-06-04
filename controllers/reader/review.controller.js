@@ -1,13 +1,43 @@
 import { BookReview } from "../../models/bookReview.model.js";
 import { Account } from "../../models/account.model.js";
 import { changeExp, checkLevelChange } from "../../utils/levelSystem.js";
+import { Book } from "../../models/book.model.js";
 
 export const createReview = async (req, res) => {
   const userid = req.user.id
   try {
-    const { content, rating, chapternumber, chaptertitle, chapterid, username, bookid } = req.body;
+    const { content, chapternumber, chaptertitle, chapterid, username, bookid } = req.body;
+    let { rating } = req.body
     //Get the user to increase exp
     const user = await Account.findById(req.user.id).select("exp level rank");
+
+
+    //check if rating is valid
+    if (rating) {
+      try {
+        rating = parseInt(rating);
+      } catch (error) {
+        return res.status(400).json({ success: false, message: "Invalid rating value" });
+      }
+
+      if (rating < 0 || rating > 5) {
+        return res.status(400).json({ success: false, message: "Rating must be between 0 and 5" });
+      }
+
+      //Get the book
+      const book = await Book.findById(bookid);
+      if (!book) {
+        return res.status(404).json({ success: false, message: "Book not found" });
+      }
+
+      //get number of reviews
+      const numReviews = await BookReview.countDocuments({ bookid: bookid });
+
+      //update the book's rating
+      const newRating = ((book.rating * numReviews) + rating) / (numReviews + 1);
+      book.rating = newRating;
+      await book.save();
+    }
 
     //increase exp of user
     const newexp = changeExp('comment', user.exp, req.user.role);
@@ -103,6 +133,30 @@ export const deleteReview = async (req, res) => {
       return res.status(404).json({ success: false, message: "Review not found" });
     }
 
+    // recalculate the book's rating if the review has a rating
+    if (review.rating) {
+      const book = await Book.findById(review.bookid);
+      if (!book) {
+        return res.status(404).json({ success: false, message: "Book not found" });
+      }
+
+      // Get the number of reviews before deletion
+      const numReviews = await BookReview.countDocuments({ bookid: book._id });
+
+      // If there are no reviews left, set the rating to 0
+      if (numReviews <= 1) {
+        book.rating = 0;
+      } else {
+        // Recalculate the rating
+        const remainingReviews = await BookReview.find({ bookid: book._id });
+        const totalRating = remainingReviews.reduce((acc, review) => acc + (review.rating || 0), 0);
+        book.rating = totalRating / (numReviews - 1);
+      }
+
+      // Save the updated book rating
+      await book.save();
+    }
+
     // Delete the review
     await BookReview.findByIdAndDelete(reviewid);
 
@@ -129,6 +183,34 @@ export const updateReview = async (req, res) => {
     // Update the review's content and rating
     review.content = content || review.content;
     review.rating = rating !== undefined ? rating : review.rating;
+
+    //Update the book's rating if the rating is provided
+    if (review.rating) {
+      let oldRating = review.rating;
+      // Get the book
+      const book = await Book.findById(review.bookid);
+      if (!book) {
+        return res.status(404).json({ success: false, message: "Book not found" });
+      }
+
+      // Get the total number of reviews for this book
+      const numReviews = await BookReview.countDocuments({ bookid: review.bookid });
+
+      if (numReviews > 0) {
+        if (oldRating) {
+          const newRating = ((book.rating * numReviews) - oldRating + rating) / numReviews;
+          book.rating = newRating;
+        } else {
+          const newRating = ((book.rating * (numReviews - 1)) + rating) / numReviews;
+          book.rating = newRating;
+        }
+      } else {
+        book.rating = rating;
+      }
+
+      // Save the updated book rating
+      await book.save();
+    }
 
     // Save the updated review
     await review.save();
