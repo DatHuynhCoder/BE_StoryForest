@@ -9,7 +9,6 @@ export const createReview = async (req, res) => {
     const { content, chapternumber, chaptertitle, chapterid, username, bookid } = req.body;
     let { rating } = req.body
     //Get the user to increase exp
-    console.log("rate: ", rating)
     const user = await Account.findById(req.user.id).select("exp level rank");
 
 
@@ -50,7 +49,6 @@ export const createReview = async (req, res) => {
 
     //save the updated user
     await user.save();
-    console.log(rating)
     // Create a new review
     const newReview = await BookReview.create({
       content,
