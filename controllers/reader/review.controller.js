@@ -9,13 +9,14 @@ export const createReview = async (req, res) => {
     const { content, chapternumber, chaptertitle, chapterid, username, bookid } = req.body;
     let { rating } = req.body
     //Get the user to increase exp
+    console.log("rate: ", rating)
     const user = await Account.findById(req.user.id).select("exp level rank");
 
 
-    //check if rating is valid
+    //check if rating is valid 
     if (rating) {
       try {
-        rating = parseInt(rating);
+        rating = parseFloat(rating);
       } catch (error) {
         return res.status(400).json({ success: false, message: "Invalid rating value" });
       }
@@ -34,8 +35,8 @@ export const createReview = async (req, res) => {
       const numReviews = await BookReview.countDocuments({ bookid: bookid });
 
       //update the book's rating
-      const newRating = ((book.rating * numReviews) + rating) / (numReviews + 1);
-      book.rating = newRating;
+      const newRating = ((book.rate * numReviews) + rating) / (numReviews + 1);
+      book.rate = newRating;
       await book.save();
     }
 
@@ -49,7 +50,7 @@ export const createReview = async (req, res) => {
 
     //save the updated user
     await user.save();
-
+    console.log(rating)
     // Create a new review
     const newReview = await BookReview.create({
       content,
