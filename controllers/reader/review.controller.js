@@ -2,6 +2,7 @@ import { BookReview } from "../../models/bookReview.model.js";
 import { Account } from "../../models/account.model.js";
 import { changeExp, checkLevelChange } from "../../utils/levelSystem.js";
 import { Book } from "../../models/book.model.js";
+import mongoose from "mongoose";
 
 export const createReview = async (req, res) => {
   const userid = req.user.id
@@ -95,7 +96,7 @@ export const getReviewByChapterId = async (req, res) => {
   try {
     const reviews = await BookReview.find({ chapterid: req.params.chapterid }).populate({
       path: 'userid',
-      select: 'username avatar' // Replace 'name email' with the fields you want to retrieve from the user model
+      select: 'username avatar level' // Replace 'name email' with the fields you want to retrieve from the user model
     });
     return res.status(200).json({ success: true, data: reviews });
   } catch (error) {
@@ -123,44 +124,59 @@ export const getReviewByUserIdAndChapterid = async (req, res) => {
 }
 
 export const deleteReview = async (req, res) => {
+  const reviewid = req.params.id;
+  const session = await mongoose.startSession();
   try {
-    const reviewid = req.params.id;
-    const review = await BookReview.findById(reviewid);
+    session.startTransaction();
+    const review = await BookReview.findById(reviewid).session(session);
 
     // Check if review exists
     if (!review) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(404).json({ success: false, message: "Review not found" });
     }
 
     // recalculate the book's rating if the review has a rating
     if (review.rating) {
-      const book = await Book.findById(review.bookid);
+      const book = await Book.findById(review.bookid).session(session);
+
       if (!book) {
+        await session.abortTransaction();
+        session.endSession();
         return res.status(404).json({ success: false, message: "Book not found" });
       }
 
       // Get the number of reviews before deletion
-      const numReviews = await BookReview.countDocuments({ bookid: book._id });
+      const numReviews = await BookReview.countDocuments({ bookid: book._id }).session(session);;
 
       // If there are no reviews left, set the rating to 0
       if (numReviews <= 1) {
-        book.rating = 0;
+        book.rate = 0;
       } else {
         // Recalculate the rating
-        const remainingReviews = await BookReview.find({ bookid: book._id });
+        const remainingReviews = await BookReview.find({
+          bookid: book._id,
+          _id: { $ne: reviewid }
+        }).session(session);
         const totalRating = remainingReviews.reduce((acc, review) => acc + (review.rating || 0), 0);
-        book.rating = totalRating / (numReviews - 1);
+        book.rate = totalRating / (numReviews - 1);
       }
 
       // Save the updated book rating
-      await book.save();
+      await book.save({ session });
     }
 
     // Delete the review
-    await BookReview.findByIdAndDelete(reviewid);
+    await BookReview.findByIdAndDelete(reviewid).session(session);;
+
+    await session.commitTransaction();
+    session.endSession();
 
     return res.status(200).json({ success: true, message: "Review deleted successfully" });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     console.error("Error in delete review: ", error.message);
     return res.status(500).json({ success: false, message: "Server error" });
   }
