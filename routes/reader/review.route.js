@@ -29,9 +29,9 @@ reviewRouter.get('/chapter/:chapterid', getReviewByChapterId);
 reviewRouter.get('/user/:userid/:chapterid', getReviewByUserIdAndChapterid);
 
 //delete a review
-reviewRouter.delete('/:reviewid', deleteReview);
+reviewRouter.delete('/:id', protect, checkRole('admin', 'VIP reader', 'staff', 'reader'), deleteReview);
 
 //update a review
-reviewRouter.patch('/:userid/:chapterid', updateReview);
+reviewRouter.patch('/:userid/:chapterid', protect, checkRole('admin', 'VIP reader', 'staff', 'reader'), updateReview);
 
 export default reviewRouter;
