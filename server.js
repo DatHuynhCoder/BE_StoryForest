@@ -27,6 +27,7 @@ import dashboardRouter from "./routes/admin/dashboard.route.js";
 import AdvancedSearchRouter from "./routes/vipreader/advancedSearch.route.js";
 import paymentRouter from "./routes/reader/payment.route.js";
 import displaydataRouter from "./routes/user/displaydata.route.js";
+import vipManagementRouter from "./routes/vipreader/vipManagement.route.js";
 
 dotenv.config(); // You can access .env vars globally
 
@@ -64,24 +65,18 @@ app.use("/api/staff/chapter", chapterRoute);
 
 //api for reader
 app.use("/api/reader/account", accountRouter);
-
 app.use("/api/reader/favorite", favoriteRouter);
-
 app.use("/api/reader/review", reviewRouter);
-
 app.use("/api/reader/dailycheckin", dailycheckinRouter)
-
 app.use("/api/reader/payment", paymentRouter)
-
 app.use("/api/novel", novelRouter);
-
 app.use("/api/manga", mangaRouter);
-
 app.use('/api/search', searchRouter);
 
 //api for VIP reader
 app.use('/api/vipreader/texttospeak', texttospeakRouter);
 app.use("/api/vipreader/advanced-search", AdvancedSearchRouter)
+app.use('/api/vipreader/vipmanagement', vipManagementRouter);
 
 //api for user
 app.use('/api/user/homepage', homepageRouter);
