@@ -33,7 +33,7 @@ export const createPaymentLink = async (req, res) => {
 }
 
 export const createPaymentLinkWithOption = async (req, res) => {
-  const userid = req.user.id
+  const userid = xorEncrypt(req.user.id, "__storyforest__")
   const { duration, amount, name } = req.body
   const orderCode = Number(`${Date.now()}${Math.floor(10 + Math.random() * 90)}`); // Example: 16832012345671234
   const order = {
@@ -47,8 +47,8 @@ export const createPaymentLinkWithOption = async (req, res) => {
         price: amount,
       },
     ],
-    returnUrl: `${YOUR_DOMAIN}/success?userid=${userid}&name=${name}&duration=${duration}$price=${amount}`,
-    cancelUrl: `${YOUR_DOMAIN}/cancel`,
+    returnUrl: `${YOUR_DOMAIN}/success?userid=${userid}&name=${name}&duration=${duration}&price=${amount}`,
+    cancelUrl: `${YOUR_DOMAIN}/cancel?userid=${userid}&name=${name}&duration=${duration}&price=${amount}`,
   };
   const paymentLink = await payos.createPaymentLink(order);
   return res.json({ url: paymentLink.checkoutUrl });
