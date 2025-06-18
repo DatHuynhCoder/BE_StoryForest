@@ -1,5 +1,6 @@
 import { Account } from '../../models/account.model.js';
 import { format } from 'date-fns';
+import { VipSubscription } from "../../models/vipSubscription.model.js"
 import bcrypt from 'bcryptjs';
 
 // [GET] /api/admin/users/summary - Tổng hợp số lượng user và staff
@@ -10,11 +11,20 @@ export const getUserSummary = async (req, res) => {
       Account.countDocuments({ role: { $in: ['admin', 'staff'] } })
     ]);
 
+    //get all vip subscriptions
+    const totalVipsub = await VipSubscription.find({});
+
+    // Calculate total income from all VIP subscriptions price
+    const totalIncome = totalVipsub.reduce((acc, sub) => {
+      return acc + (sub.price || 0);
+    }, 0);
+
     res.status(200).json({
       success: true,
       data: {
         totalReaders,
-        totalStaffs
+        totalStaffs,
+        totalIncome
       }
     });
   } catch (error) {
