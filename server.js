@@ -82,6 +82,7 @@ app.use('/api/user/displaydata', displaydataRouter);
 
 //api for admin
 app.use('/api/admin', adminRouter);
+app.use('/api/admin/dashboard', dashboardRouter);
 
 app.listen(PORT, () => {
   connectDB();
