@@ -41,6 +41,7 @@ export const createVIPSubcriptions = async (req, res) => {
     
     return res.status(201).json({ success: true, message: "VIP Subscription created successfully"});
   } catch (error) {
+    console.log("Error creating VIP subscription:", error);
     return res.status(500).json({ success: false, message: "Server Error" })
   }
 }

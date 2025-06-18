@@ -23,6 +23,7 @@ import dailycheckinRouter from "./routes/reader/dailycheckin.route.js";
 // admin 
 import adminRouter from "./routes/admin/admin.route.js";
 import dashboardRouter from "./routes/admin/dashboard.route.js";
+import vipControlRouter from "./routes/staff/vipControl.route.js";
 
 import AdvancedSearchRouter from "./routes/vipreader/advancedSearch.route.js";
 import paymentRouter from "./routes/reader/payment.route.js";
@@ -53,14 +54,10 @@ app.get("/", (req, res) => {
 });
 
 //api for staff
-//API author here
 app.use("/api/staff/author", authorRouter);
-
-//API book here
 app.use("/api/staff/book", bookRouter);
-
-//API chapter here
 app.use("/api/staff/chapter", chapterRoute);
+app.use('/api/staff/vipcontrol', vipControlRouter);
 
 
 //api for reader
