@@ -130,3 +130,55 @@ export const getDailyIncomeStats = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 }
+
+export const getMonthlyVIPSubs = async (req,res) => {
+  try {
+    const { year } = req.query;
+    //check if year is valid
+    if (!year || !/^\d{4}$/.test(year)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Năm không hợp lệ (YYYY)'
+      });
+    }
+
+    // Get VIP subscription count each month
+    const stats = await VipSubscription.aggregate([
+      {
+        $match: {
+          startDate: {
+            $gte: new Date(`${year}-01-01T00:00:00.000Z`),
+            $lt: new Date(`${parseInt(year) + 1}-01-01T00:00:00.000Z`)
+          }
+        }
+      },
+      {
+        $group: {
+          _id: { $month: '$startDate' }, // Group by month
+          count: { $sum: 1 } // Count the number of subscriptions for each month
+        }
+      },
+      {
+        $sort: { _id: 1 } // Sort by month ascending
+      }
+    ])
+
+    // Generate full stats for each month
+    const fullStats = Array.from({ length: 12 }, (_, i) => {
+      const month = i + 1;
+      const monthStat = stats.find(stat => stat._id === month);
+      return {
+        month,
+        count: monthStat ? monthStat.count : 0
+      };
+    })
+    
+    // Return the full stats
+    res.status(200).json({
+      success: true,
+      data: fullStats
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+}
