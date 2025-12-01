@@ -2,6 +2,7 @@ import cloudinary from "../../config/cloudinary.js";
 //delete temp files import
 import { deleteTempFiles } from "../../utils/deleteTempFiles.js";
 import { Author } from "../../models/author.model.js";
+import * as streamifier from 'streamifier';
 
 export const createAuthor = async (req, res) => {
   try {
@@ -9,13 +10,24 @@ export const createAuthor = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ success: false, message: "Author avatar is required" });
     }
-    const avatarCloudinary = await cloudinary.uploader.upload(req.file.path, {
-      folder: 'StoryForest/Author',
-      transformation: [
-        { width: 800, height: 800, crop: "limit" },
-        { quality: "auto" },
-        { fetch_format: "auto" }
-      ]
+
+    const avatarCloudinary = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: "StoryForest/Author",
+          transformation: [
+            { width: 800, height: 800, crop: "limit" },
+            { quality: "auto" },
+            { fetch_format: "auto" }
+          ]
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+
+      streamifier.createReadStream(req.file.buffer).pipe(uploadStream)
     });
 
     //get the public_id and url of the image
@@ -24,8 +36,6 @@ export const createAuthor = async (req, res) => {
       public_id: avatarCloudinary.public_id
     };
 
-    //delete the temp file
-    req.file && deleteTempFiles([req.file]);
 
     //create an author
     const newAuthor = await Author.create({
@@ -100,14 +110,24 @@ export const updateAuthor = async (req, res) => {
       // Delete old avatar
       await cloudinary.uploader.destroy(author.avatar.public_id);
 
-      // Upload new avatar
-      const avatarCloudinary = await cloudinary.uploader.upload(req.file.path, {
-        folder: 'StoryForest/Author',
-        transformation: [
-          { width: 800, height: 800, crop: "limit" },
-          { quality: "auto" },
-          { fetch_format: "auto" }
-        ]
+
+      //upload new Avatar
+      const avatarCloudinary = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: "StoryForest/Author",
+            transformation: [
+              { width: 800, height: 800, crop: "limit" },
+              { quality: "auto" },
+              { fetch_format: "auto" }
+            ]
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        streamifier.createReadStream(req.file.buffer).pipe(uploadStream)
       });
 
       // Add new avatar info to updateData
@@ -116,8 +136,6 @@ export const updateAuthor = async (req, res) => {
         public_id: avatarCloudinary.public_id
       };
 
-      // Delete the temp file
-      deleteTempFiles([req.file]);
     }
 
     // Update author

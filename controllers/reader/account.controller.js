@@ -2,6 +2,7 @@ import { Account } from "../../models/account.model.js";
 import cloudinary from "../../config/cloudinary.js";
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from "google-auth-library";
+import * as streamifier from 'streamifier';
 //delete temp files import
 import { deleteTempFiles } from "../../utils/deleteTempFiles.js";
 
@@ -218,13 +219,23 @@ export const updateAccount = async (req, res) => {
 			}
 
 			// Upload new avatar
-			const avatarCloudinary = await cloudinary.uploader.upload(req.files.avatar[0].path, {
-				folder: "StoryForest/Account",
-				transformation: [
-					{ width: 800, height: 800, crop: "limit" },
-					{ quality: "auto" },
-					{ fetch_format: "auto" }
-				]
+			const avatarCloudinary = await new Promise((resolve, reject) => {
+				const uploadStream = cloudinary.uploader.upload_stream(
+					{
+						folder: "StoryForest/Account",
+						transformation: [
+							{ width: 800, height: 800, crop: "limit" },
+							{ quality: "auto" },
+							{ fetch_format: "auto" }
+						]
+					},
+					(error, result) => {
+						if (error) reject(error);
+						else resolve(result);
+					}
+				);
+
+				streamifier.createReadStream(req.files.avatar[0].buffer).pipe(uploadStream);
 			});
 
 			// Add new avatar info to updateData
@@ -242,13 +253,22 @@ export const updateAccount = async (req, res) => {
 			}
 
 			// Upload new background image
-			const bgCloudinary = await cloudinary.uploader.upload(req.files.bgImg[0].path, {
-				folder: "StoryForest/Account/BG",
-				transformation: [
-					{ width: 1920, height: 1080, crop: "limit" },
-					{ quality: "auto" },
-					{ fetch_format: "auto" }
-				]
+			const bgCloudinary = await new Promise((resolve, reject) => {
+				const uploadStream = cloudinary.uploader.upload_stream(
+					{
+						folder: "StoryForest/Account/BG",
+						transformation: [
+							{ width: 1920, height: 1080, crop: "limit" },
+							{ quality: "auto" },
+							{ fetch_format: "auto" }
+						]
+					},
+					(error, result) => {
+						if (error) reject(error);
+						else resolve(result);
+					}
+				);
+				streamifier.createReadStream(req.files.bgImg[0].buffer).pipe(uploadStream)
 			});
 
 			// Add new background image info to updateData
@@ -257,9 +277,6 @@ export const updateAccount = async (req, res) => {
 				public_id: bgCloudinary.public_id
 			};
 		}
-
-		// Delete temporary uploaded files and clean the uploads folder
-		deleteTempFiles([req.files?.avatar?.[0], req.files?.bgImg?.[0]]);
 
 		// Update account
 		const updatedAccount = await Account.findByIdAndUpdate(accountId, updateData, { new: true, runValidators: true });
