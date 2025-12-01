@@ -5,6 +5,7 @@ import { NovelChapter } from "../../models/novelchapter.model.js";
 //delete temp files import
 import { deleteTempFiles } from "../../utils/deleteTempFiles.js";
 import { randomString } from "../../utils/randomString.js";
+import * as streamifier from 'streamifier';
 
 
 export const getAllBooks = async (req, res) => {
@@ -86,13 +87,24 @@ export const createBook = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ success: false, message: "Book image is required" });
     }
-    const bookImgCloudinary = await cloudinary.uploader.upload(req.file.path, {
-      folder: 'StoryForest/Book',
-      transformation: [
-        { width: 800, height: 800, crop: "limit" },
-        { quality: "auto" },
-        { fetch_format: "auto" }
-      ]
+
+    const bookImgCloudinary = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: "StoryForest/Book",
+          transformation: [
+            { width: 800, height: 800, crop: "limit" },
+            { quality: "auto" },
+            { fetch_format: "auto" }
+          ]
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+
+      streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
     });
 
     //get the public_id and url of the image
@@ -100,9 +112,6 @@ export const createBook = async (req, res) => {
       url: bookImgCloudinary.secure_url,
       public_id: bookImgCloudinary.public_id
     };
-
-    //delete the temp file
-    req.file && deleteTempFiles([req.file]);
 
     //create a book
     const newBook = await Book.create({
@@ -232,13 +241,23 @@ export const updateBook = async (req, res) => {
       await cloudinary.uploader.destroy(book.bookImg.public_id);
 
       // Upload new image
-      const uploadedImg = await cloudinary.uploader.upload(req.file.path, {
-        folder: 'StoryForest/Book',
-        transformation: [
-          { width: 800, height: 800, crop: "limit" },
-          { quality: "auto" },
-          { fetch_format: "auto" }
-        ]
+      const uploadedImg = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: "StoryForest/Book",
+            transformation: [
+              { width: 800, height: 800, crop: "limit" },
+              { quality: "auto" },
+              { fetch_format: "auto" }
+            ]
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+
+        streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
       });
 
       updatedData.bookImg = {
@@ -246,8 +265,6 @@ export const updateBook = async (req, res) => {
         public_id: uploadedImg.public_id
       };
 
-      // Delete temp file
-      req.file && deleteTempFiles([req.file]);
     }
 
     // Update the book

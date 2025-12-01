@@ -6,6 +6,7 @@ import { MangaChapter } from "../../models/mangachapter.model.js";
 import { MangaImage } from "../../models/mangaimage.model.js";
 import { NovelChapter } from "../../models/novelchapter.model.js";
 import { randomString } from "../../utils/randomString.js";
+import * as streamifier from 'streamifier';
 
 
 export const getMangaDetails = async (req, res) => {
@@ -92,20 +93,27 @@ export const createMangaChapter = async (req, res) => {
     const mangaFiles = req.files['contentImgs'] || [];
     const mangaImgs = [];
     for (const file of mangaFiles) {
-      const mangaImg = await cloudinary.uploader.upload(file.path, {
-        folder: 'StoryForest/Chapter',
-        transformation: [
-          { width: 800, height: 800, crop: "limit" },
-          { quality: "auto" },
-          { fetch_format: "auto" }
-        ]
+      const mangaImg = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: "StoryForest/Chapter",
+            transformation: [
+              { width: 800, height: 800, crop: "limit" },
+              { quality: "auto" },
+              { fetch_format: "auto" }
+            ]
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+
+        streamifier.createReadStream(file.buffer).pipe(uploadStream);
       });
 
       mangaImgs.push(mangaImg.secure_url + "@" + mangaImg.public_id);
     }
-
-    //delete the temp files
-    req.files && deleteTempFiles(mangaFiles);
 
     //create new manga chapter
     const newChapter = await MangaChapter.create({
@@ -194,13 +202,24 @@ export const addPageChapter = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ success: false, message: "Chapter image is required" });
     }
-    const pageImgCloudinary = await cloudinary.uploader.upload(req.file.path, {
-      folder: 'StoryForest/Chapter',
-      transformation: [
-        { width: 800, height: 800, crop: "limit" },
-        { quality: "auto" },
-        { fetch_format: "auto" }
-      ]
+
+    const pageImgCloudinary = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: "StoryForest/Chapter",
+          transformation: [
+            { width: 800, height: 800, crop: "limit" },
+            { quality: "auto" },
+            { fetch_format: "auto" }
+          ]
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+
+      streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
     });
 
     //add to the chapter images with pageindex
@@ -212,9 +231,6 @@ export const addPageChapter = async (req, res) => {
     //update the chapter pages
     chapter.pages = chapterImages.images.length;
     await chapter.save();
-
-    //delete the temp file
-    req.file && deleteTempFiles([req.file]);
 
     return res.status(200).json({
       success: true,
