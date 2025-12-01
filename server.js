@@ -33,12 +33,28 @@ import vipManagementRouter from "./routes/vipreader/vipManagement.route.js";
 dotenv.config(); // You can access .env vars globally
 
 const app = express();
+connectDB();
 
 //add middeleware
 app.use(express.json()); //parse json
 app.use(express.urlencoded({ extended: true })); //allow to handle url encoded data
 app.use(cookieParser()); //use Cookies to store token
-app.use(cors({ origin: "http://localhost:5173", credentials: true })); //allow cross origin request
+
+const allowedOrigins = [
+  'http://localhost:5173', // Development frontend URL
+  process.env.FRONTEND_URL // Production frontend URL (set this in Vercel's environment variables)
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
 
 if (process.env.NODE_ENV !== 'development') {
   app.use((req, res, next) => {
@@ -85,6 +101,5 @@ app.use('/api/admin', adminRouter);
 app.use('/api/admin/dashboard', dashboardRouter);
 
 app.listen(PORT, () => {
-  connectDB();
   console.log(`Server start at http://localhost:${PORT}`);
 });
