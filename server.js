@@ -42,7 +42,8 @@ app.use(cookieParser()); //use Cookies to store token
 
 const allowedOrigins = [
   'http://localhost:5173', // Development frontend URL
-  process.env.FRONTEND_URL // Production frontend URL (set this in Vercel's environment variables)
+  process.env.FRONTEND_URL, // Production frontend URL (set this in Vercel's environment variables)
+  process.env.SUB_FRONTEND_URL // Base frontent URL
 ];
 
 app.use(cors({
